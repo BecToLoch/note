@@ -66,6 +66,15 @@ if (orderClearBtn) {
     }
   });
 }
+if (orderClearBtn) {
+  orderClearBtn.addEventListener('click', () => {
+    clearCart();
+    if (orderOverlay) {
+      orderOverlay.style.display = 'none';
+      document.body.classList.remove('cart-open');
+    }
+  });
+}
 
 /* Submit order button */
 const orderSubmitBtn = document.getElementById('orderSubmit');
@@ -109,6 +118,17 @@ if (orderForm) {
     if (orderFormOverlay2) orderFormOverlay2.style.display = 'none';
     // Remove blur
     document.body.classList.remove('cart-open');
+  });
+}
+
+/* Cancel button in order form overlay */
+const orderCancelBtn = document.getElementById('orderCancel');
+if (orderCancelBtn) {
+  orderCancelBtn.addEventListener('click', () => {
+    if (orderFormOverlay2) {
+      orderFormOverlay2.style.display = 'none';
+      document.body.classList.remove('cart-open');
+    }
   });
 }
 

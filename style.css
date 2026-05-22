@@ -14,6 +14,9 @@ body {
   display: flex;
   flex-direction: column;
 }
+.cart-open {
+  overflow: hidden;
+}
 
 /* ===== ПЕРЕМЕННЫЕ ДЛЯ СВЕТЛОЙ ТЕМЫ ===== */
 :root {
@@ -402,6 +405,8 @@ body.dark {
   border-radius: 4px;
 }
 .order-form button {
+  border-radius: 10px;
+  height: 25px;
   margin-top: 12px;
   width: 48%;
 }
@@ -411,6 +416,8 @@ body.dark {
   border: none;
 }
 .order-form button#orderCancel {
+  border-radius: 10px;
+  height: 25px;
   background: #f44336;
   color: #fff;
   border: none;
