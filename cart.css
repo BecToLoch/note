@@ -1,0 +1,140 @@
+/* ===== СТИЛИ КОРЗИНЫ (модальное окно) ===== */
+.cart-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  background: var(--cart-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  overflow-y: auto;
+  padding: 24px;
+  z-index: 1000;
+}
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.cart-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+.cart-close {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: var(--text);
+}
+.cart-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.cart-list li {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+.cart-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  text-align: right;
+}
+.cart-total {
+  font-weight: bold;
+  margin-right: 8px;
+  color: var(--text);
+}
+.cart-checkout,
+.cart-clear {
+  background: #ff6f61;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+.cart-clear {
+  background: #bbb;
+}
+
+/* Элементы внутри корзины */
+
+/* Фикс стилей для кнопок +/- в корзине */
+.cart-item__btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--primary);
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.cart-item__btn:hover {
+  background: var(--primary-light);
+  color: #fff;
+  border-color: var(--primary);
+}
+.left {
+  display: flex;
+}
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cart-item-top {
+  display: flex;
+  align-items: center;
+}
+.cart-item-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-right: 12px;
+}
+.cart-item-name {
+  flex: 1;
+  font-size: 1rem;
+  color: var(--text);
+}
+.cart-item-subtotal {
+  font-weight: 600;
+  color: var(--primary);
+  margin-left: 12px;
+}
+.cart-item-controls {
+  display: flex;
+  align-items: center;
+  margin-top: 6px;
+}
+.cart-item-price {
+  display: flex;
+  align-items: center;
+}
+
+/* Кнопка очистки корзины в шапке */
+.cart-button {
+  display: block !important;
+}
+.cart-button button {
+  margin-top: 8px;
+}

@@ -1,0 +1,62 @@
+/* ===== ГЛОБАЛЬНЫЕ СТИЛИ ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  transition: background-color 0.3s, color 0.3s;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.cart-open {
+  overflow: hidden;
+}
+
+/* ===== ПЕРЕМЕННЫЕ СВЕТЛОЙ ТЕМЫ ===== */
+:root {
+  --bg: #f5f5f5;
+  --card-bg: #ffffff;
+  --text: #222;
+  --text-muted: #666;
+  --primary: #6f4e37;
+  --primary-light: #a0796b;
+  --header-bg: #ffffff;
+  --filter-bg: #e8e0d8;
+  --filter-active: #6f4e37;
+  --filter-text: #333;
+  --cart-bg: #ffffff;
+  --border: #ddd;
+  --shadow: rgba(0,0,0,0.08);
+}
+
+/* ===== ПЕРЕМЕННЫЕ ТЁМНОЙ ТЕМЫ ===== */
+body.dark {
+  --bg: #1a1a2e;
+  --card-bg: #252540;
+  --text: #e0e0e0;
+  --text-muted: #aaa;
+  --primary: #b0926e;
+  --primary-light: #c7a87b;
+  --header-bg: #252540;
+  --filter-bg: #333350;
+  --filter-active: #b0926e;
+  --filter-text: #e0e0e0;
+  --cart-bg: #252540;
+  --border: #444466;
+  --shadow: rgba(0,0,0,0.3);
+}
+
+/* ===== КОНТЕЙНЕР ===== */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+  width: 100%;
+}

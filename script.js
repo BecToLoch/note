@@ -158,7 +158,7 @@ function createCardHTML(item) {
   const count = cart[item.id] || 0;
   const buttonHTML = inCart
     ? `<div class="quantity-controls" data-id="${item.id}">
-         <button class="cart-item__btn" onclick="window.removeOneFromCart(${item.id})">−</button>
+         <button class="cart-item__btn" style"" onclick="window.removeOneFromCart(${item.id})">−</button>
          <span class="cart-item__count">${count}</span>
          <button class="cart-item__btn" onclick="window.addToCart(${item.id})">+</button>
        </div>`
