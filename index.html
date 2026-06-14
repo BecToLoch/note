@@ -2,99 +2,70 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Кафе «Уют» — Меню</title>
-<link rel="stylesheet" href="global.css">
-<link rel="stylesheet" href="main.css">
-<link rel="stylesheet" href="cart.css">
-<link rel="stylesheet" href="order.css">
-<script type="module" src="script.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Заметки</title>
+  <link rel="stylesheet" href="global.css">
 </head>
-<body>
+<body class="dark">
+  <main class="app-shell">
+<section id="listScreen" class="screen" style="display:block;">
+      <header class="topbar">
+        <div class="title-block">
+          <h1>Заметки</h1>
+        </div>     
+      </header>
 
-  <!-- ШАПКА -->
-  <header class="header">
-    <div class="container header__inner">
-      <h1 class="header__logo">☕ Кафе «Уют»</h1>
-      <button class="theme-toggle" id="themeToggle" title="Переключить тему">🌙</button>
-    </div>
-  </header>
+  <div class="search-wrap">
+    <span>🔎</span>
+    <input id="searchInput" type="search" placeholder="Поиск">
+  </div>
+<div class="action-container">
+  <select id="sortSelect" class="sort-select">
+    <option value="dateDesc">Новое → Старое</option>
+    <option value="dateAsc">Старое → Новое</option>
+    <option value="titleAsc">Заголовок А→Я</option>
+    <option value="titleDesc">Заголовок Я→А</option>
+  </select>
+  <button id="selectAllBtn" class="action-btn">Выбрать все</button>
+</div>
+<!-- deleteSelectedBtn removed as per request -->
 
-  <!-- ОСНОВНОЕ СОДЕРЖИМОЕ -->
-  <main class="container">
+  <section class="notes-section">
+        <div class="section-title">
+          <h2>Закреплённые</h2>
+          <span id="pinnedCount">0</span>
+        </div>
+        <ul id="pinnedList" class="notes-list"></ul>
+      </section>
 
-    <!-- Фильтры -->
-    <section class="filters">
-      <button class="filter-btn active" data-category="all">Все</button>
-      <button class="filter-btn" data-category="coffee">Кофе</button>
-      <button class="filter-btn" data-category="tea">Чай</button>
-      <button class="filter-btn" data-category="dessert">Десерты</button>
-      <button class="filter-btn" data-category="breakfast">Завтраки</button>
+      <section class="notes-section">
+        <div class="section-title">
+          <h2>Все заметки</h2>
+          <span id="allCount">0</span>
+        </div>
+        <ul id="notesList" class="notes-list"></ul>
+      </section>
+
+      <button class="fab" id="addNoteBtn" type="button" aria-label="Создать заметку">+</button>
     </section>
 
-    <!-- Сетка карточек -->
-    <section class="menu-grid" id="menuGrid"></section>
+<section id="editorScreen" class="screen editor-screen" style="display:none;">
+      <header class="editor-toolbar">
+        <button class="toolbar-button" id="backBtn" type="button">‹</button>
+        <div class="toolbar-actions">
+          <button class="toolbar-button" id="pinBtn" type="button" title="Закрепить">📌</button>
+          <button class="toolbar-button" id="deleteBtn" type="button" title="Удалить">🗑</button>
+          <button class="toolbar-button done" id="doneBtn" type="button">✓</button>
+        </div>
+      </header>
 
+      <div class="editor-card">
+        <input id="noteTitleInput" class="title-input" type="text" placeholder="Заголовок">
+        <textarea id="noteBodyInput" class="body-input" placeholder="Заметка"></textarea>
+      </div>
+    </section>
   </main>
 
-  <!-- ПЛАВАЮЩАЯ КНОПКА КОРЗИНЫ -->
-<div class="cart-fab" id="cartFab" title="Корзина">
-  <span id="cartSum"></span>
-  <span id="cartEmoji">🛒</span>
-</div>
-
-<!-- Корзина -->
-<div class="order-form-overlay" id="orderFormOverlay" style="display:none;">
-  <div class="order-header">
-    <h2 style="margin:0;">Корзина</h2>
-    <button id="orderClose" style="background:none;border:none;font-size:1.5rem;cursor:pointer;">✖</button>
-  </div>
-  <ul class="cart-list" id="cartItems"></ul>
-  <div id="cartEmptySticker" style="display:none; text-align:center; margin-top:20px;margin-bottom: 20px;">
-    <span style="font-size:1.2rem; color:var(--text-muted);">Корзина пуста</span>
-  </div>
-  <p class="cart-total" style=" margin-top: 10px;">Итого: <span id="cartTotal">0</span> ₽</p>
-  <div class="cart-actions" style="display:flex; float: right; justify-content:space-between; margin-top:12px;">
-    <button id="orderSubmit" style="margin-right:8px; border-radius: 10px; background:var(--primary); color:#fff; border:none; padding:8px;">Оформить заказ</button>
-    <button id="orderClear" style="flex:1; border-radius: 10px; background:#bbb; color:#000; border:none; padding:8px;">Очистить корзину</button>
-  </div>
-</div>
-
-<!-- Окно оформления заказа (отдельный от корзины) -->
-<div class="order-form-overlay" id="orderFormOverlay2" style="display: none;">
-  <div class="order-form">
-    <h2>Оформление заказа</h2>
-<form id="orderForm">
-  <label>
-    Имя:
-    <input type="text" name="name" required />
-  </label><br/>
-  <label>
-    Адрес:
-    <input type="text" name="address" required />
-  </label><br/>
-  <label>
-    Телефон:
-    <input type="tel" name="phone" required />
-  </label><br/>
-  <label>
-    Квартира:
-    <input type="text" name="apartment" required />
-  </label><br/>
-  <label>
-    Подъезд:
-    <input type="text" name="entrance" required />
-  </label><br/>
-  <label>
-    Этаж:
-    <input type="text" name="floor" required />
-  </label><br/>
-<label>
-  Комментарий:
-  <textarea name="comment" style="width:100%; height:80px; border:1px solid var(--border); border-radius:4px; padding:4px;"></textarea>
-  <div style="display:flex; justify-content:flex-end; gap:8px;">
-    <button type="submit">Подтвердить</button>
-    <button type="button" id="orderCancel">Отмена</button>
-  </div>
-</form>
-  </div>
+  <script src="script.js"></script>
+</body>
+</html>

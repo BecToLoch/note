@@ -1,233 +1,167 @@
-/**
- * script.js — главный файл с логикой меню кафе *
- * Что делает:
- * 1. Загружает данные из menu.json
- * 2. Отображает карточки блюд
- * 3. Фильтрует по категориям
- * 4. Управляет корзиной (добавление/удаление)
- * 5. Переключает тёмную/светлую тему
- */
+window.addEventListener('DOMContentLoaded', () => {
+  const listScreen = document.getElementById('listScreen');
+  const editorScreen = document.getElementById('editorScreen');
+  const notesList = document.getElementById('notesList');
+  const pinnedList = document.getElementById('pinnedList');
+  const addBtn = document.getElementById('addNoteBtn');
+  const backBtn = document.getElementById('backBtn');
+  const doneBtn = document.getElementById('doneBtn');
+  const deleteBtn = document.getElementById('deleteBtn');
+  const selectAllBtn = document.getElementById('selectAllBtn');
+  const noteTitleInput = document.getElementById('noteTitleInput');
+  const noteBodyInput = document.getElementById('noteBodyInput');
+  const searchInput = document.getElementById('searchInput');
+  const sortSelect = document.getElementById('sortSelect') || { value: 'dateDesc' };
+  const pinnedCount = document.getElementById('pinnedCount');
+  const allCount = document.getElementById('allCount');
+  const pinBtn = document.getElementById('pinBtn');
 
- // ====== СОСТОЯНИЕ ПРИЛОЖЕНИЯ ======
-import { renderMenu, renderCart } from './ui.js';
+  let selectionMode = false;
+  const selectedIds = new Set();
+  let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+  let currentNote = null;
 
- /** Все блюда, загруженные из JSON */
-let menuItems = [];
+  const save = () => localStorage.setItem('notes', JSON.stringify(notes));
 
-/** Текущая выбранная категория */
-let currentCategory = 'all';
+  const sortNotes = (arr, mode) => {
+    const cmp = (a, b) => {
+      if (mode === 'dateDesc') return b.id - a.id;
+      if (mode === 'dateAsc') return a.id - b.id;
+      if (mode === 'titleAsc') return a.title.localeCompare(b.title);
+      if (mode === 'titleDesc') return b.title.localeCompare(a.title);
+      return 0;
+    };
+    return arr.slice().sort(cmp);
+  };
 
-/** Корзина: { id: количество } */
-let cart = {};
-let lastClearedCart = null; // хранит последний очищенный набор
+  const updateDeleteButtonText = () => {
+    const delBtn = document.getElementById('deleteAllBtn');
+    if (!delBtn) return;
+    if (selectedIds.size === 0) delBtn.textContent = 'Удалить все';
+    else if (selectedIds.size === notes.length) delBtn.textContent = 'Удалить все';
+    else delBtn.textContent = 'Удалить';
+  };
 
-// ====== DOM-ЭЛЕМЕНТЫ ======
-
-const menuGrid = document.getElementById('menuGrid');
-const cartItemsContainer = document.getElementById('cartItems');
-const cartTotal = document.getElementById('cartTotal');
-const cartClearBtn = document.getElementById('cartClear');
-const cartBadge = document.getElementById('cartBadge');
-
-/* Показ/скрытие формы оформления заказа при клике на плавающую кнопку */
-const cartFab = document.getElementById('cartFab');
-const orderOverlay = document.getElementById('orderFormOverlay');
-/* Ensure overlay is hidden on load */
-if (orderOverlay) orderOverlay.style.display = 'none';
-if (cartFab) {
-  cartFab.addEventListener('click', () => {
-    if (orderOverlay) {
-      const isHidden = orderOverlay.style.display === 'none' || !orderOverlay.style.display;
-      orderOverlay.style.display = isHidden ? 'block' : 'none';
-      document.body.classList.toggle('cart-open', isHidden);
-    }
-  });
-}
-
-/* Close button functionality */
-const orderCloseBtn = document.getElementById('orderClose');
-if (orderCloseBtn) {
-  orderCloseBtn.addEventListener('click', () => {
-    if (orderOverlay) {
-      orderOverlay.style.display = 'none';
-      document.body.classList.remove('cart-open');
-    }
-  });
-}
-
-/* Clear cart button in overlay */
-const orderClearBtn = document.getElementById('orderClear');
-if (orderClearBtn) {
-  orderClearBtn.addEventListener('click', () => {
-    clearCart();
-    if (orderOverlay) {
-      orderOverlay.style.display = 'none';
-      document.body.classList.remove('cart-open');
-    }
-  });
-}
-if (orderClearBtn) {
-  orderClearBtn.addEventListener('click', () => {
-    clearCart();
-    if (orderOverlay) {
-      orderOverlay.style.display = 'none';
-      document.body.classList.remove('cart-open');
-    }
-  });
-}
-
-/* Submit order button */
-const orderSubmitBtn = document.getElementById('orderSubmit');
-if (orderSubmitBtn) {
-orderSubmitBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    // If cart is empty, show error
-    if (Object.keys(cart).length === 0) {
-      alert('В корзине нет товаров');
-      return;
-    }
-    const orderFormOverlay2 = document.getElementById('orderFormOverlay2');
-    if (orderFormOverlay2) {
-      orderFormOverlay2.style.display = 'block';
-      document.body.classList.add('cart-open');
-    }
-  });
-}
-
-// Очистка корзины (handled via UI, listener removed)
-if (cartClearBtn) {
-  cartClearBtn.addEventListener('click', clearCart);
-}
-
-// Checkout button открывает форму оформления заказа
-const cartCheckoutBtn = document.getElementById('cartCheckout');
-if (cartCheckoutBtn) {
-  cartCheckoutBtn.addEventListener('click', () => {
-    if (orderOverlay) orderOverlay.style.display = 'block';
-  });
-}
-
-/* Ensure order form submit also closes its overlay */
-if (orderForm) {
-  orderForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    alert('Заказ оформлен! Спасибо.');
-    clearCart();
-    // Close both overlays
-    if (orderOverlay) orderOverlay.style.display = 'none';
-    if (orderFormOverlay2) orderFormOverlay2.style.display = 'none';
-    // Remove blur
-    document.body.classList.remove('cart-open');
-  });
-}
-
-/* Cancel button in order form overlay */
-const orderCancelBtn = document.getElementById('orderCancel');
-if (orderCancelBtn) {
-  orderCancelBtn.addEventListener('click', () => {
-    if (orderFormOverlay2) {
-      orderFormOverlay2.style.display = 'none';
-      document.body.classList.remove('cart-open');
-    }
-  });
-}
-
-/* UI elements */
-const themeToggle = document.getElementById('themeToggle');
-const filterBtns = document.querySelectorAll('.filter-btn');
-
-// ====== ЗАГРУЗКА ДАННЫХ ======
-
-/** Загружает меню из menu.json и запускает отрисовку */
-async function loadMenu() {
-  try {
-    const response = await fetch('menu.json');
-    menuItems = await response.json();
-    renderMenu(menuItems, currentCategory, menuGrid, createCardHTML);
-    renderCart(cart, menuItems, cartItemsContainer, cartTotal, cartBadge);
-  } catch (error) {
-    console.error('Ошибка загрузки меню:', error);
-    menuGrid.innerHTML = '<p style="color:red;">Не удалось загрузить меню. Проверьте файл menu.json</p>';
-  }
-}
-
-// ====== ОТРИСОВКА МЕНЮ ======
-
-function createCardHTML(item) {
-  const inCart = cart[item.id] ? true : false;
-  const count = cart[item.id] || 0;
-  const buttonHTML = inCart
-    ? `<div class="quantity-controls" data-id="${item.id}">
-         <button class="cart-item__btn" style"" onclick="window.removeOneFromCart(${item.id})">−</button>
-         <span class="cart-item__count">${count}</span>
-         <button class="cart-item__btn" onclick="window.addToCart(${item.id})">+</button>
-       </div>`
-    : `<button class="card__add" data-id="${item.id}">В корзину</button>`;
-  return `
-    <div class="card">
-      <img class="card__image" src="${item.image}" alt="${item.name}" loading="lazy">
-      <div class="card__body">
-        <h3 class="card__name">${item.name}</h3>
-        <p class="card__description">${item.description}</p>
-        <div class="card__footer">
-          <span class="card__price">${item.price} ₽</span>
-          ${buttonHTML}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-// ---------- Добавление в корзину ----------
-window.addToCart = function(id) {
-  id = Number(id);
-  cart[id] = (cart[id] || 0) + 1;
-  renderCart(cart, menuItems, cartItemsContainer, cartTotal, cartBadge);
-  renderMenu(menuItems, currentCategory, menuGrid, createCardHTML);
+  const render = (filter = '') => {
+    const mode = sortSelect.value || 'dateDesc';
+    const filtered = notes.filter(n =>
+      n.title.toLowerCase().includes(filter) ||
+      n.body.toLowerCase().includes(filter)
+    );
+    const sorted = sortNotes(filtered, mode);
+    notesList.innerHTML = '';
+    pinnedList.innerHTML = '';
+    sorted.forEach(n => {
+      const li = document.createElement('li');
+      li.className = 'note-item';
+      if (selectionMode) {
+        const checked = selectedIds.has(n.id) ? 'checked' : '';
+        li.innerHTML = `
+          <input type="checkbox" class="note-select" data-id="${n.id}" ${checked} style="margin-right:0.5rem;">
+          <div>
+            <h3>${n.title}</h3>
+            <p>${n.body.substring(0, 60)}${n.body.length > 60 ? '...' : ''}</p>
+          </div>`;
+        const cb = li.querySelector('.note-select');
+li.onclick = (e) => {
+  if (e.target.closest('.note-select')) return;
+  cb.checked = !cb.checked;
+  cb.dispatchEvent(new Event('change'));
 };
+        cb.addEventListener('change', e => {
+          const id = Number(e.target.dataset.id);
+          if (e.target.checked) selectedIds.add(id); else selectedIds.delete(id);
+          updateDeleteButtonText();
+        });
+      } else {
+        li.innerHTML = `
+          <div>
+            <h3>${n.title}</h3>
+            <p>${n.body.substring(0, 60)}${n.body.length > 60 ? '...' : ''}</p>
+          </div>`;
+        li.onclick = () => openEditor(n.id);
+      }
+      (n.pinned ? pinnedList : notesList).appendChild(li);
+    });
+    pinnedCount.textContent = sorted.filter(n => n.pinned).length;
+    allCount.textContent = sorted.length;
+    pinnedCount.style.display = pinnedCount.textContent == 0 ? 'none' : 'inline';
+    allCount.style.display = allCount.textContent == 0 ? 'none' : 'inline';
+  };
 
-// ---------- Удаление одного товара из корзины ----------
-window.removeOneFromCart = function(id) {
-  id = Number(id);
-  if (cart[id]) {
-    cart[id]--;
-    if (cart[id] <= 0) delete cart[id];
-    renderCart(cart, menuItems, cartItemsContainer, cartTotal, cartBadge);
-    renderMenu(menuItems, currentCategory, menuGrid, createCardHTML);
-  }
-};
+  const openEditor = id => {
+    currentNote = notes.find(n => n.id === id);
+    noteTitleInput.value = currentNote.title;
+    noteBodyInput.value = currentNote.body;
+    pinBtn.textContent = currentNote.pinned ? '📌' : '📌';
+    listScreen.style.display = 'none';
+    editorScreen.style.display = 'flex';
+  };
 
-// ---------- Очистка корзины ----------
-function clearCart() {
-  cart = {};
-  renderCart(cart, menuItems, cartItemsContainer, cartTotal, cartBadge);
-  renderMenu(menuItems, currentCategory, menuGrid, createCardHTML);
-}
+  const closeEditor = () => {
+    currentNote = null;
+    editorScreen.style.display = 'none';
+    listScreen.style.display = 'block';
+  };
 
-// ---------- Переключение темы ----------
-if (themeToggle) {
-  themeToggle.addEventListener('click', () => {
-    const isDark = document.body.classList.toggle('dark');
-    // переключаем визуальное состояние кнопки
-    if (isDark) {
-      themeToggle.classList.add('active');
+  selectAllBtn.onclick = () => {
+    selectionMode = !selectionMode;
+    if (!selectionMode) selectedIds.clear();
+    selectAllBtn.textContent = selectionMode ? 'Отменить' : 'Выбрать все';
+    if (selectionMode) {
+      if (!document.getElementById('deleteAllBtn')) {
+        const delBtn = document.createElement('button');
+        delBtn.id = 'deleteAllBtn';
+        delBtn.className = 'action-btn';
+        delBtn.textContent = 'Удалить все';
+        delBtn.onclick = () => {
+          notes = selectedIds.size === 0 ? [] : notes.filter(n => !selectedIds.has(n.id));
+          save(); selectedIds.clear(); selectionMode = false;
+          selectAllBtn.textContent = 'Выбрать все';
+          delBtn.remove(); render(searchInput.value.trim().toLowerCase());
+        };
+        selectAllBtn.parentNode.insertBefore(delBtn, selectAllBtn.nextSibling);
+      }
     } else {
-      themeToggle.classList.remove('active');
+      const existing = document.getElementById('deleteAllBtn');
+      if (existing) existing.remove();
     }
-  });
-}
+    render(searchInput.value.trim().toLowerCase());
+  };
 
-// ---------- Фильтрация по категориям ----------
-filterBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    const category = btn.dataset.category;
-    currentCategory = category || 'all';
-    // обновляем активный стиль кнопки
-    filterBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    renderMenu(menuItems, currentCategory, menuGrid, createCardHTML);
-  });
+  pinBtn.onclick = () => {
+    if (!currentNote) return;
+    currentNote.pinned = !currentNote.pinned;
+    pinBtn.textContent = currentNote.pinned ? '📌' : '📌';
+    save(); render(searchInput.value.trim().toLowerCase()); closeEditor();
+  };
+
+  addBtn.onclick = () => {
+    currentNote = { id: Date.now(), title: '', body: '', pinned: false };
+    noteTitleInput.value = ''; noteBodyInput.value = ''; pinBtn.textContent = '📌';
+    listScreen.style.display = 'none'; editorScreen.style.display = 'flex';
+  };
+
+  backBtn.onclick = closeEditor;
+
+  doneBtn.onclick = () => {
+    if (!currentNote) return;
+    const title = noteTitleInput.value.trim();
+    const body = noteBodyInput.value.trim();
+    if (!title && !body) { closeEditor(); return; }
+    currentNote.title = title || 'Без названия';
+    currentNote.body = body;
+    if (!notes.some(n => n.id === currentNote.id)) notes.unshift(currentNote);
+    save(); render(searchInput.value.trim().toLowerCase()); closeEditor();
+  };
+
+  deleteBtn.onclick = () => {
+    if (!currentNote) return;
+    notes = notes.filter(n => n.id !== currentNote.id);
+    save(); render(searchInput.value.trim().toLowerCase()); closeEditor();
+  };
+
+  sortSelect.addEventListener('change', () => render(searchInput.value.trim().toLowerCase()));
+  searchInput.addEventListener('input', e => render(e.target.value.trim().toLowerCase()));
+  render();
 });
-
-// ---------- Инициализация ----------
-loadMenu();
