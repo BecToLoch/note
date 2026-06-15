@@ -1,0 +1,61 @@
+.app {
+  width: min(1780px, 96vw);
+  height: min(1040px, 94vh);
+  margin: 3vh auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  background: rgba(16, 18, 22, 0.92);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.window-bar {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  user-select: none;
+}
+
+.traffic-lights {
+  display: flex;
+  gap: 8px;
+  margin-right: 18px;
+}
+
+.traffic-lights span {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.traffic-lights .red { background: #ff5f57; }
+.traffic-lights .yellow { background: #febc2e; }
+.traffic-lights .green { background: #28c840; }
+
+.window-title {
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.main-layout {
+  height: calc(100% - 42px);
+  display: grid;
+  grid-template-columns: 250px 320px minmax(0, 1fr);
+}
+
+.section-title {
+  margin: 16px 8px 8px;
+  color: var(--muted-2);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hidden {
+  display: none !important;
+}

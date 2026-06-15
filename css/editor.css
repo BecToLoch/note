@@ -1,0 +1,102 @@
+.editor-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  overflow-x: auto;
+}
+
+.toolbar-btn {
+  min-width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+
+.toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.editor-meta {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px;
+  color: var(--muted-2);
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.editor-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 34px 54px 56px;
+}
+
+.title-input {
+  width: 100%;
+  margin-bottom: 18px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+
+.title-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.body-editor {
+  min-height: 58vh;
+  outline: none;
+  color: rgba(245, 245, 247, 0.92);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.body-editor:empty::before {
+  content: "Начните писать...";
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.body-editor.is-locked {
+  color: var(--muted);
+}
+
+.locked-message,
+.empty-list {
+  display: grid;
+  place-items: center;
+  min-height: 320px;
+  padding: 28px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  text-align: center;
+}
+
+.empty-list h3 {
+  margin: 10px 0 6px;
+  color: var(--text);
+}
+
+.empty-list p {
+  margin: 0;
+}
