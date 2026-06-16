@@ -1,13 +1,7 @@
 /* =========================================================
-   Начальные данные приложения
+   Начальные данные и общие функции
    ========================================================= */
 
-/*
-  Начальная заметка.
-  Папка изменена на Notes, потому что папка Personal удалена.
-  Тело заметки теперь хранится как HTML, чтобы работало настоящее
-  форматирование: заголовки, жирный текст, списки и т.д.
-*/
 const initialNotes = [
   {
     id: "note-1",
@@ -40,33 +34,17 @@ const tagOrder = Object.keys(tagDefinitions);
 const tagLabels = Object.fromEntries(
   Object.entries(tagDefinitions).map(([tagName, tag]) => [tagName, tag.label])
 );
-const tagColors = Object.fromEntries(
-  Object.entries(tagDefinitions).map(([tagName, tag]) => [tagName, tag.color])
-);
 
-/*
-  Форматирует дату заметки для карточки в средней колонке.
-*/
 function formatDate(timestamp) {
   const date = new Date(timestamp);
-  const day = date.getDate();
-  const month = date.toLocaleString("en-US", { month: "short" });
 
-  return `${month} ${day}`;
+  return `${date.toLocaleString("en-US", { month: "short" })} ${date.getDate()}`;
 }
 
-/*
-  Делает короткое описание заметки.
-  body может быть HTML, поэтому сначала убираем HTML-теги.
-*/
 function getNotePreview(note) {
   const text = getFirstTextLine(note.body);
 
-  if (!text) {
-    return "No additional text";
-  }
-
-  return text;
+  return text || "No additional text";
 }
 
 function getFirstTextLine(html) {
@@ -78,12 +56,10 @@ function getFirstTextLine(html) {
 }
 
 function getFirstBlockText(element) {
-  const children = Array.from(element.children);
+  const blockChild = Array.from(element.children).find(isBlockElement);
 
-  for (const child of children) {
-    if (isBlockElement(child)) {
-      return getFirstBlockText(child);
-    }
+  if (blockChild) {
+    return getFirstBlockText(blockChild);
   }
 
   return normalizePreviewText(element.textContent).split("\n")[0] || "";
@@ -97,97 +73,40 @@ function normalizePreviewText(text) {
   return String(text || "").replace(/\s+/g, " ").trim();
 }
 
-/*
-  Проверяет, есть ли у заметки нужный тег.
-*/
-function noteHasTag(note, tagName) {
-  return note.tags.includes(tagName);
-}
-
-/*
-  Возвращает первый тег заметки.
-*/
-function getFirstTag(note) {
-  return note.tags[0] || "";
-}
-
-/*
-  Приводит старые теги к новым названиям.
-*/
 function normalizeTagNames(tags) {
   const tagAliases = {
     important: "work",
     study: "ideas"
   };
- 
+
   if (!Array.isArray(tags)) return [];
- 
-  const normalizedTags = tags
-    .map((tag) => tagAliases[tag] || tag)
-    .filter((tag) => tagOrder.includes(tag));
- 
-  return [...new Set(normalizedTags)].slice(0, 1);
+
+  return [...new Set(
+    tags
+      .map((tag) => tagAliases[tag] || tag)
+      .filter((tag) => tagOrder.includes(tag))
+  )].slice(0, 1);
 }
 
-/*
-  Очищает текст от переносов строк и лишних пробелов.
-*/
 function normalizeText(text) {
-  return text.toLowerCase().replace(/\s+/g, " ").trim();
+  return String(text || "").toLowerCase().replace(/\s+/g, " ").trim();
 }
 
-/*
-  Проверяет, является ли заметка маркированным списком.
-  Это нужно для правила: в папке Notes показываются только такие заметки.
-*/
-function isBulletNote(note) {
-  const body = note.body || "";
-
-  return (
-    body.includes("<ul") ||
-    body.includes("<li") ||
-    body.includes("\n•") ||
-    body.includes("\n- ")
-  );
-}
-
-/*
-  Убирает HTML-теги и возвращает обычный текст.
-  Например: "<b>Привет</b>" -> "Привет".
-*/
-function stripHTML(html) {
-  const tempElement = document.createElement("div");
-
-  tempElement.innerHTML = html;
-
-  return tempElement.textContent || tempElement.innerText || "";
-}
-
-/*
-  Превращает обычный текст в простой HTML.
-  Используется для старых заметок, которые могли сохраниться до изменения редактора.
-*/
 function plainTextToHTML(text) {
-  const lines = String(text).split("\n");
   const htmlLines = [];
-  let listItems = [];
+  const listItems = [];
 
   function closeList() {
     if (listItems.length > 0) {
       htmlLines.push("<ul>" + listItems.join("") + "</ul>");
-      listItems = [];
+      listItems.length = 0;
     }
   }
 
-  lines.forEach((line) => {
+  String(text).split("\n").forEach((line) => {
     const trimmedLine = line.trim();
 
-    if (trimmedLine.startsWith("• ")) {
-      listItems.push("<li>" + escapeHTML(trimmedLine.slice(2)) + "</li>");
-      return;
-    }
-
-    if (trimmedLine.startsWith("- ")) {
+    if (trimmedLine.startsWith("• ") || trimmedLine.startsWith("- ")) {
       listItems.push("<li>" + escapeHTML(trimmedLine.slice(2)) + "</li>");
       return;
     }

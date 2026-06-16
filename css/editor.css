@@ -182,6 +182,10 @@
   letter-spacing: -0.7px;
 }
 
+.note-title-input:disabled {
+  opacity: 0.45;
+}
+
 .note-title-input::placeholder {
   color: #636366;
 }
@@ -203,6 +207,10 @@
   padding: 8px 28px 28px;
   font-size: 17px;
   line-height: 1.55;
+}
+
+.note-body-editor.inactive {
+  opacity: 0.45;
 }
 
 .note-body-editor::-webkit-scrollbar {
