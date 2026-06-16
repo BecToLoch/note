@@ -15,28 +15,24 @@ const initialNotes = [
     body:
       "<p>August 14th!</p><p>Ideas:</p><ul><li>Le Creuset Dutch oven (she's been hinting)</li><li>Weekend at a winery in Sonoma</li><li>Fancy olive oil + cookbook set</li><li>SpaFinder gift card</li><li>Custom photo book from last summer's trip</li></ul><p>Budget: ~$200</p><p>Order deadline: August 7 (shipping buffer)</p>",
     folder: "Notes",
-    tags: ["study"],
+    tags: ["ideas"],
     updatedAt: new Date("2026-06-03T19:00:00").getTime(),
     deletedAt: null
   }
 ];
 
 const tagDefinitions = {
-  important: {
-    label: "Важно",
+  work: {
+    label: "Важное",
     color: "#ff453a"
   },
-  personal: {
-    label: "Личное",
-    color: "#0a84ff"
-  },
-  study: {
-    label: "Учеба",
-    color: "#30d158"
-  },
-  work: {
+  ideas: {
     label: "Работа",
-    color: "#64d2ff"
+    color: "#5e5ce6"
+  },
+  travel: {
+    label: "Личное",
+    color: "#30d158"
   }
 };
 
@@ -64,13 +60,41 @@ function formatDate(timestamp) {
   body может быть HTML, поэтому сначала убираем HTML-теги.
 */
 function getNotePreview(note) {
-  const text = stripHTML(note.body).trim();
+  const text = getFirstTextLine(note.body);
 
   if (!text) {
     return "No additional text";
   }
 
-  return text.slice(0, 90);
+  return text;
+}
+
+function getFirstTextLine(html) {
+  const tempElement = document.createElement("div");
+
+  tempElement.innerHTML = String(html || "").replace(/<br\s*\/?>/gi, "\n");
+
+  return getFirstBlockText(tempElement);
+}
+
+function getFirstBlockText(element) {
+  const children = Array.from(element.children);
+
+  for (const child of children) {
+    if (isBlockElement(child)) {
+      return getFirstBlockText(child);
+    }
+  }
+
+  return normalizePreviewText(element.textContent).split("\n")[0] || "";
+}
+
+function isBlockElement(element) {
+  return ["DIV", "P", "H1", "H2", "H3", "H4", "H5", "H6", "LI", "BLOCKQUOTE"].includes(element.tagName);
+}
+
+function normalizePreviewText(text) {
+  return String(text || "").replace(/\s+/g, " ").trim();
 }
 
 /*
@@ -92,22 +116,17 @@ function getFirstTag(note) {
 */
 function normalizeTagNames(tags) {
   const tagAliases = {
-    recipe: "recipe",
-    travel: "travel",
-    reading: "reading",
-    home: "home",
-    ideas: "ideas",
-    finance: "finance"
+    important: "work",
+    study: "ideas"
   };
-  const legacyTagNames = ["recipe", "travel", "reading", "home", "work", "ideas", "finance"];
  
   if (!Array.isArray(tags)) return [];
  
   const normalizedTags = tags
     .map((tag) => tagAliases[tag] || tag)
-    .filter((tag) => tagOrder.includes(tag) || legacyTagNames.includes(tag));
+    .filter((tag) => tagOrder.includes(tag));
  
-  return [...new Set(normalizedTags)];
+  return [...new Set(normalizedTags)].slice(0, 1);
 }
 
 /*

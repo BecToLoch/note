@@ -40,10 +40,10 @@
         
         <button class="sidebar-item" data-filter="folder:Work">
           <span class="sidebar-icon">📁</span>
-          <span>Work</span>
+          <span>Tags Note</span>
           <span class="sidebar-count" id="countWork">0</span>
         </button>
-        
+
         <button class="sidebar-item" data-filter="deleted">
           <span class="sidebar-icon">🗑️</span>
           <span>Recently Deleted</span>
@@ -55,46 +55,22 @@
       <section class="sidebar-section">
         <div class="sidebar-section-title">TAGS</div>
         
-        <button class="tag-sidebar-item" data-filter="tag:recipe">
-          <span class="tag-dot tag-recipe"></span>
-          <span>recipe</span>
-          <span class="sidebar-count" id="countRecipe">0</span>
-        </button>
-        
         <button class="tag-sidebar-item" data-filter="tag:travel">
           <span class="tag-dot tag-travel"></span>
-          <span>travel</span>
+          <span>Личное</span>
           <span class="sidebar-count" id="countTravel">0</span>
-        </button>
-        
-        <button class="tag-sidebar-item" data-filter="tag:reading">
-          <span class="tag-dot tag-reading"></span>
-          <span>reading</span>
-          <span class="sidebar-count" id="countReading">0</span>
-        </button>
-        
-        <button class="tag-sidebar-item" data-filter="tag:home">
-          <span class="tag-dot tag-home"></span>
-          <span>home</span>
-          <span class="sidebar-count" id="countHome">0</span>
         </button>
         
         <button class="tag-sidebar-item" data-filter="tag:work">
           <span class="tag-dot tag-work"></span>
-          <span>work</span>
+          <span>Важное</span>
           <span class="sidebar-count" id="countWorkTag">0</span>
         </button>
         
         <button class="tag-sidebar-item" data-filter="tag:ideas">
           <span class="tag-dot tag-ideas"></span>
-          <span>ideas</span>
+          <span>Работа</span>
           <span class="sidebar-count" id="countIdeas">0</span>
-        </button>
-        
-        <button class="tag-sidebar-item" data-filter="tag:finance">
-          <span class="tag-dot tag-finance"></span>
-          <span>finance</span>
-          <span class="sidebar-count" id="countFinance">0</span>
         </button>
       </section>
       
@@ -126,8 +102,9 @@
           placeholder="Search"
           autocomplete="off"
         />
+        <button class="search-clear-button" id="searchClearButton" type="button" aria-label="Очистить поиск">×</button>
       </div>
-      
+
       <!-- Список найденных/выбранных заметок -->
       <div class="notes-list" id="notesList"></div>
       
@@ -168,33 +145,17 @@
       <div class="tag-popover hidden" id="tagPopover">
         <div class="tag-popover-title">ТЕГИ</div>
 
-        <button class="tag-popover-item" data-filter="tag:recipe">
-          <span class="tag-dot tag-recipe"></span>
-          <span>recipe</span>
-        </button>
-        <button class="tag-popover-item" data-filter="tag:travel">
+        <button class="tag-popover-item" data-tag="travel">
           <span class="tag-dot tag-travel"></span>
-          <span>travel</span>
+          <span>Личное</span>
         </button>
-        <button class="tag-popover-item" data-filter="tag:reading">
-          <span class="tag-dot tag-reading"></span>
-          <span>reading</span>
-        </button>
-        <button class="tag-popover-item" data-filter="tag:home">
-          <span class="tag-dot tag-home"></span>
-          <span>home</span>
-        </button>
-        <button class="tag-popover-item" data-filter="tag:work">
+        <button class="tag-popover-item" data-tag="work">
           <span class="tag-dot tag-work"></span>
-          <span>work</span>
+          <span>Важное</span>
         </button>
-        <button class="tag-popover-item" data-filter="tag:ideas">
+        <button class="tag-popover-item" data-tag="ideas">
           <span class="tag-dot tag-ideas"></span>
-          <span>ideas</span>
-        </button>
-        <button class="tag-popover-item" data-filter="tag:finance">
-          <span class="tag-dot tag-finance"></span>
-          <span>finance</span>
+          <span>Работа</span>
         </button>
       </div>
 
@@ -260,9 +221,6 @@
           <span>Нумерованный список</span>
         </button>
       </div>
-      
-      <!-- Теги текущей заметки -->
-       <!-- editor-tags removed as per requirements -->
       
       <!-- Поле заголовка заметки -->
       <input

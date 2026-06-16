@@ -52,7 +52,7 @@ function findNoteById(notes, id) {
   Создает новую заметку.
   Дата ставится текущая.
 */
-function createNoteObject(folder = "Work") {
+function createNoteObject(folder = "Tags Note") {
   const now = Date.now();
 
   return {

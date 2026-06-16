@@ -37,28 +37,19 @@ function renderSidebarCounts(notes) {
     const countElement = document.getElementById("count" + folderName);
 
     if (countElement) {
-      const folderNotes = activeNotes.filter((note) => note.folder === folderName);
-
-      /*
-        В папке Notes показываем только маркированные заметки.
-      */
       const visibleCount =
         folderName === "Notes"
-          ? folderNotes.filter((note) => isBulletNote(note)).length
-          : folderNotes.length;
+          ? activeNotes.filter((note) => note.tags.length === 0).length
+          : activeNotes.filter((note) => note.tags.length > 0).length;
 
       countElement.textContent = visibleCount;
     }
   });
 
   const tagCounts = {
-    countRecipe: "recipe",
-    countTravel: "travel",
-    countReading: "reading",
-    countHome: "home",
     countWorkTag: "work",
     countIdeas: "ideas",
-    countFinance: "finance"
+    countTravel: "travel"
   };
 
   Object.entries(tagCounts).forEach(([elementId, tagName]) => {
@@ -130,17 +121,13 @@ function getFilteredNotes(notes, activeFilter, searchTerm) {
       if (activeFilter.startsWith("folder:")) {
         const folderName = activeFilter.replace("folder:", "");
 
-        if (note.folder !== folderName) return false;
-
-        /*
-          В папке Notes показываем только заметки с маркированным списком.
-        */
-        if (folderName === "Notes" && !isBulletNote(note)) return false;
+        if (folderName === "Notes" && note.tags.length > 0) return false;
+        if (folderName === "Work" && note.tags.length === 0) return false;
       }
 
       /*
         Фильтр по тегу.
-        Например: tag:finance.
+        Например: tag:work.
       */
       if (activeFilter.startsWith("tag:")) {
         const tagName = activeFilter.replace("tag:", "");
@@ -195,47 +182,25 @@ function renderNotesList(notes, selectedNoteId, activeFilter, searchTerm) {
   Создает HTML одной карточки заметки.
 */
 function createNoteCardHTML(note, isActive) {
-  const firstTag = getFirstTag(note);
-  const tagClass = firstTag ? getTagClass(firstTag) : "";
-  const tagColor = tagColors[firstTag] || "#30d158";
-  const tagHTML = firstTag
-    ? `<span class="note-card-tag ${tagClass}" style="background: ${hexToRgba(tagColor, 0.16)}; color: ${tagColor};">${escapeHTML(firstTag)}</span>`
-    : "";
+  const tagsHTML = note.tags
+    .slice(0, 1)
+    .map((tagName) => {
+      const tag = tagDefinitions[tagName];
+      const color = tag?.color || "#30d158";
+      const label = tag?.label || tagName;
+
+      return `<span class="note-card-tag ${getTagClass(tagName)}"><span class="tag-dot ${getTagClass(tagName)}"></span><span>${escapeHTML(label)}</span></span>`;
+    })
+    .join("");
 
   return `
     <button class="note-card ${isActive ? "active" : ""}" data-note-id="${note.id}">
       <div class="note-card-title">${escapeHTML(note.title || "Без названия")}</div>
       <div class="note-card-date">${formatDate(note.updatedAt)}</div>
       <div class="note-card-preview">${escapeHTML(getNotePreview(note))}</div>
-      ${tagHTML}
+      ${tagsHTML}
     </button>
   `;
-}
-
-/*
-  Отрисовывает теги в правой колонке.
-*/
-function renderEditorTags(note) {
-  const editorTagsElement = document.getElementById("editorTags");
-
-  if (!note) {
-    editorTagsElement.innerHTML = "";
-    return;
-  }
-
-  editorTagsElement.innerHTML = note.tags
-    .map((tagName) => {
-      const tag = tagDefinitions[tagName];
-      const color = tag?.color || "#30d158";
-      const label = tag?.label || tagName;
-
-      return `
-        <button class="editor-tag ${getTagClass(tagName)}" data-tag="${escapeHTML(tagName)}" style="background: ${hexToRgba(color, 0.16)}; color: ${color};">
-          ${escapeHTML(label)}
-        </button>
-      `;
-    })
-    .join("");
 }
 
 /*
@@ -248,6 +213,7 @@ function renderEditor(note) {
   if (!note) {
     titleInput.value = "";
     bodyEditor.innerHTML = "";
+    bodyEditor.scrollTop = 0;
     titleInput.placeholder = "Без названия";
     return;
   }
@@ -256,14 +222,10 @@ function renderEditor(note) {
   bodyEditor.innerHTML = note.body.includes("<")
     ? note.body
     : plainTextToHTML(note.body);
+  bodyEditor.scrollTop = 0;
 
   titleInput.placeholder = "Без названия";
 
-  // Render tags only if the container exists (it was removed per requirements)
-  const editorTagsEl = document.getElementById("editorTags");
-  if (editorTagsEl) {
-    renderEditorTags(note);
-  }
 }
 
 /*
@@ -298,6 +260,7 @@ function renderActiveFilter(activeFilter) {
 function getFilterTitle(activeFilter) {
   if (activeFilter === "all") return "All Notes";
   if (activeFilter === "deleted") return "Recently Deleted";
+  if (activeFilter === "folder:Work") return "Tags Note";
   if (activeFilter.startsWith("folder:")) return activeFilter.replace("folder:", "");
   if (activeFilter.startsWith("tag:")) {
     const tagName = activeFilter.replace("tag:", "");

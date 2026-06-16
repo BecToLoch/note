@@ -4,9 +4,12 @@
 
 .editor-panel {
   position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
+  height: 100vh;
   min-width: 0;
+  overflow: hidden;
   background: #1e1e1f;
 }
 
@@ -58,7 +61,7 @@
   position: absolute;
   top: 58px;
   right: 22px;
-  z-index: 19;
+  z-index: 1000;
   width: 260px;
   padding: 10px;
   border-radius: 14px;
@@ -163,32 +166,10 @@
   background: #3a3a3c;
 }
 
-/* Блок тегов под верхней строкой */
-
-.editor-tags {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 38px;
-  padding: 0 22px;
-  border-bottom: 1px solid #303032;
-}
-
-.editor-tag {
-  display: inline-flex;
-  align-items: center;
-  height: 22px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: rgba(48, 209, 88, 0.16);
-  color: #30d158;
-  font-size: 12px;
-  font-weight: 600;
-}
-
 /* Поле заголовка */
 
 .note-title-input {
+  flex-shrink: 0;
   width: 100%;
   margin: 0;
   padding: 22px 28px 8px;
@@ -208,9 +189,13 @@
 /* Редактируемая область текста */
 
 .note-body-editor {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   border: 0;
   outline: 0;
   background: transparent;
@@ -218,6 +203,10 @@
   padding: 8px 28px 28px;
   font-size: 17px;
   line-height: 1.55;
+}
+
+.note-body-editor::-webkit-scrollbar {
+  display: none;
 }
 
 .note-body-editor:empty::before {
@@ -231,7 +220,9 @@
 
 .note-body-editor h2 {
   margin: 0 0 8px;
+  color: #fff;
   font-size: 24px;
+  font-weight: 700;
   line-height: 1.2;
 }
 

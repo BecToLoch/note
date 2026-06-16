@@ -58,6 +58,7 @@
 }
 
 .search-box {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -71,11 +72,37 @@
 
 .search-box input {
   width: 100%;
+  padding-right: 28px;
   border: 0;
   outline: 0;
   background: transparent;
   color: #fff;
   font-size: 14px;
+}
+
+.search-clear-button {
+  position: absolute;
+  right: 10px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #8e8e93;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.search-clear-button:hover {
+  background: #4a4a4d;
+  color: #fff;
+}
+
+.search-clear-button.visible {
+  display: flex;
 }
 
 .search-box input::placeholder {
@@ -146,15 +173,19 @@
 }
 
 .note-card-date {
-  display: inline;
-  margin: 0 6px 8px 0;
+  display: block;
+  margin: 0 0 6px;
   color: #c7c7cc;
   font-size: 13px;
 }
 
 .note-card-preview {
-  display: inline;
+  display: block;
+  height: 1.35em;
+  max-height: 1.35em;
   overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: #d1d1d6;
   font-size: 13px;
   line-height: 1.35;
@@ -163,14 +194,25 @@
 .note-card-tag {
   display: inline-flex;
   align-items: center;
-  height: 20px;
+  gap: 10px;
+  height: 28px;
   margin-top: 8px;
-  padding: 0 9px;
-  border-radius: 999px;
-  background: rgba(48, 209, 88, 0.16);
-  color: #30d158;
-  font-size: 12px;
-  font-weight: 600;
+  margin-right: 8px;
+  padding: 0 8px 0 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #d6d6d6;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.note-card-tag .tag-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
 }
 
 .notes-list-footer {

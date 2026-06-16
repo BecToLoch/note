@@ -105,13 +105,9 @@
 
 /* Цвета тегов как на скрине */
 
-.tag-recipe { background: #ff9500; }
 .tag-travel { background: #30d158; }
-.tag-reading { background: #0a84ff; }
-.tag-home { background: #bf5af2; }
 .tag-work { background: #ff453a; }
 .tag-ideas { background: #5e5ce6; }
-.tag-finance { background: #30d158; }
 
 .sidebar-footer {
   display: flex;
@@ -125,4 +121,4 @@
 .totalNotes {
   border-top: 1px solid #303032;
   padding: 12px 0 0 0;
-}
+} 

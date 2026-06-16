@@ -12,6 +12,7 @@ let notes = loadNotes();
 let selectedNoteId = notes[0]?.id || null;
 let activeFilter = "folder:Notes";
 let searchTerm = "";
+let savedBodyEditorSelection = null;
 
 /*
   Получаем элементы интерфейса.
@@ -21,6 +22,7 @@ const notesListElement = document.getElementById("notesList");
 const titleInput = document.getElementById("noteTitleInput");
 const bodyEditor = document.getElementById("noteBodyEditor");
 const searchInput = document.getElementById("searchInput");
+const searchClearButton = document.getElementById("searchClearButton");
 const modal = document.getElementById("noteModal");
 const folderSelect = document.getElementById("folderSelect");
 const formatButton = document.getElementById("formatButton");
@@ -59,7 +61,16 @@ document.querySelectorAll("[data-filter]").forEach((button) => {
 
 searchInput.addEventListener("input", () => {
   searchTerm = searchInput.value;
+  updateSearchClearButton();
 
+  renderNotesListOnly();
+});
+
+searchClearButton.addEventListener("click", () => {
+  searchInput.value = "";
+  searchTerm = "";
+  updateSearchClearButton();
+  searchInput.focus();
   renderNotesListOnly();
 });
 
@@ -101,6 +112,7 @@ document.getElementById("deleteButton").addEventListener("click", () => {
 
 document.getElementById("tagButton").addEventListener("click", (event) => {
   event.stopPropagation();
+  closeFormatPopover(formatPopover);
   toggleTagPopover(tagPopover);
 });
 
@@ -109,17 +121,25 @@ tagPopover.addEventListener("click", (event) => {
 
   if (!tagItem) return;
 
-  const selectedNote = getSelectedNote();
-  const tagName = tagItem.dataset.filter.replace("tag:", "");
+  event.stopPropagation();
 
-  if (!selectedNote) return;
+  const selectedNote = getSelectedNote();
+  const tagName = tagItem.dataset.tag;
+
+  if (!selectedNote || !tagName) return;
+
+  if (selectedNote.tags.length >= 1 && !selectedNote.tags.includes(tagName)) {
+    closeTagPopover(tagPopover);
+    renderAll();
+    return;
+  }
 
   if (!selectedNote.tags.includes(tagName)) {
     selectedNote.tags.push(tagName);
   }
 
   selectedNote.updatedAt = Date.now();
-  activeFilter = tagItem.dataset.filter;
+  activeFilter = `tag:${tagName}`;
   searchTerm = "";
   searchInput.value = "";
 
@@ -145,8 +165,14 @@ formatButton.addEventListener("click", (event) => {
     и меню сразу не закрылось.
   */
   event.stopPropagation();
+  closeTagPopover(tagPopover);
   toggleFormatPopover(formatPopover);
 });
+
+bodyEditor.addEventListener("keyup", saveBodyEditorSelection);
+bodyEditor.addEventListener("mouseup", saveBodyEditorSelection);
+bodyEditor.addEventListener("input", saveBodyEditorSelection);
+formatPopover.addEventListener("mousedown", saveBodyEditorSelection);
 
 formatPopover.addEventListener("click", (event) => {
   /*
@@ -157,7 +183,15 @@ formatPopover.addEventListener("click", (event) => {
 
   if (!menuItem) return;
 
-  applyFormat(menuItem.dataset.format);
+  applyFormat(
+    menuItem.dataset.format,
+    bodyEditor,
+    getSelectedNote,
+    saveNotes,
+    notes,
+    renderSidebarCounts,
+    renderNotesListOnly
+  );
   closeFormatPopover(formatPopover);
 });
 
@@ -226,6 +260,8 @@ titleInput.addEventListener("input", () => {
 });
 
 bodyEditor.addEventListener("input", () => {
+  wrapDirectTextNodes(bodyEditor);
+  saveBodyEditorSelection();
   updateSelectedNoteFromInputs();
   saveNotes(notes);
   renderSidebarCounts(notes);
@@ -256,6 +292,10 @@ function renderNotesListOnly() {
   renderNotesList(notes, selectedNoteId, activeFilter, searchTerm);
 }
 
+function updateSearchClearButton() {
+  searchClearButton.classList.toggle("visible", searchInput.value.trim().length > 0);
+}
+
 /*
   Если выбранная заметка не попадает под текущий фильтр,
   выбираем первую заметку из отфильтрованного списка.
@@ -278,6 +318,31 @@ function getSelectedNote() {
 /*
   Обновляет выбранную заметку данными из полей заголовка и текста.
 */
+function saveBodyEditorSelection() {
+  const selection = window.getSelection();
+
+  if (!selection || selection.rangeCount === 0) return;
+
+  const range = selection.getRangeAt(0);
+
+  if (bodyEditor.contains(range.commonAncestorContainer) || range.commonAncestorContainer === bodyEditor) {
+    savedBodyEditorSelection = range.cloneRange();
+  }
+}
+
+function restoreBodyEditorSelection() {
+  const selection = window.getSelection();
+
+  if (!selection || !savedBodyEditorSelection) return;
+
+  try {
+    selection.removeAllRanges();
+    selection.addRange(savedBodyEditorSelection);
+  } catch (error) {
+    savedBodyEditorSelection = null;
+  }
+}
+
 function updateSelectedNoteFromInputs() {
   const selectedNote = getSelectedNote();
 
@@ -349,7 +414,7 @@ function saveSelectedNoteSettings() {
 
 /*
   Превращает строку тегов в массив.
-  Пример: "finance, ideas" -> ["finance", "ideas"]
+  Пример: "work, ideas" -> ["work", "ideas"]
 */
 function parseTags(text) {
   return text
