@@ -6,9 +6,12 @@ let notes = loadNotes();
 let selectedNoteId = notes[0]?.id || null;
 let activeFilter = "folder:Notes";
 let searchTerm = "";
+let trashSelectedIds = [];
+let trashSelectionMode = false;
 
 const els = {
   notesList: document.getElementById("notesList"),
+  listHeader: document.querySelector(".list-header"),
   titleInput: document.getElementById("noteTitleInput"),
   bodyEditor: document.getElementById("noteBodyEditor"),
   searchInput: document.getElementById("searchInput"),
@@ -31,10 +34,31 @@ function bindEvents() {
     button.addEventListener("click", () => selectFilter(button.dataset.filter));
   });
 
+  els.listHeader.addEventListener("click", (event) => {
+    const selectButton = event.target.closest("[data-trash-select]");
+
+    if (!selectButton) return;
+
+    event.stopPropagation();
+    handleTrashSelectAllClick();
+  });
+
   els.notesList.addEventListener("click", (event) => {
+    const trashSelectCircle = event.target.closest("[data-trash-select-id]");
+
+    if (trashSelectCircle) {
+      event.stopPropagation();
+      toggleTrashSelection(trashSelectCircle.dataset.trashSelectId);
+      return;
+    }
+
     const noteCard = event.target.closest(".note-card");
 
     if (!noteCard) return;
+
+    if (isDeletedFilter()) {
+      toggleTrashSelection(noteCard.dataset.noteId);
+    }
 
     selectedNoteId = noteCard.dataset.noteId;
     renderNotesListOnly();
@@ -82,6 +106,11 @@ function bindEvents() {
 }
 
 function selectFilter(filter) {
+    if (activeFilter === "deleted" && filter !== "deleted") {
+      trashSelectedIds = [];
+      trashSelectionMode = false;
+    }
+
   activeFilter = filter;
   searchTerm = "";
   els.searchInput.value = "";
@@ -96,6 +125,8 @@ function createNewNote() {
   activeFilter = "all";
   searchTerm = "";
   els.searchInput.value = "";
+  trashSelectedIds = [];
+  trashSelectionMode = false;
 
   saveNotes(notes);
   renderAll();
@@ -201,7 +232,7 @@ function renderAll() {
 }
 
 function renderNotesListOnly() {
-  renderNotesList(notes, selectedNoteId, activeFilter, searchTerm);
+  renderNotesList(notes, selectedNoteId, activeFilter, searchTerm, trashSelectedIds, trashSelectionMode);
 }
 
 function updateSearchClearButton() {
@@ -239,6 +270,8 @@ function deleteSelectedNote() {
     selectedNote.deletedAt = Date.now();
   } else {
     notes = notes.filter((note) => note.id !== selectedNote.id);
+    trashSelectedIds = trashSelectedIds.filter((id) => id !== selectedNote.id);
+    trashSelectionMode = false;
   }
 
   saveNotes(notes);
@@ -267,4 +300,54 @@ function closeFormatPopover(formatPopover) {
   if (!formatPopover) return;
 
   formatPopover.classList.add("hidden");
+}
+
+function isDeletedFilter() {
+  return activeFilter === "deleted";
+}
+
+function handleTrashSelectAllClick() {
+  if (!isDeletedFilter()) return;
+
+  const trashNotes = notes.filter((note) => note.deletedAt);
+
+  if (trashNotes.length === 0) return;
+
+  if (!trashSelectionMode) {
+    trashSelectionMode = true;
+    trashSelectedIds = [];
+    renderNotesListOnly();
+    return;
+  }
+
+  const selectedCount = trashSelectedIds.length;
+
+  if (selectedCount === 0 || selectedCount === trashNotes.length) {
+    notes = notes.filter((note) => !note.deletedAt);
+    trashSelectedIds = [];
+    trashSelectionMode = false;
+    saveNotes(notes);
+    renderAll();
+    return;
+  }
+
+  if (selectedCount > 0) {
+    notes = notes.filter((note) => !trashSelectedIds.includes(note.id));
+    trashSelectedIds = [];
+    trashSelectionMode = false;
+    saveNotes(notes);
+    renderAll();
+  }
+}
+
+function toggleTrashSelection(noteId) {
+  if (!isDeletedFilter() || !trashSelectionMode || !noteId) return;
+
+  if (trashSelectedIds.includes(noteId)) {
+    trashSelectedIds = trashSelectedIds.filter((id) => id !== noteId);
+  } else {
+    trashSelectedIds = [...trashSelectedIds, noteId];
+  }
+
+  renderNotesListOnly();
 }

@@ -104,13 +104,15 @@ function getFilteredNotes(notes, activeFilter, searchTerm) {
   }).sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
-function renderNotesList(notes, selectedNoteId, activeFilter, searchTerm) {
+function renderNotesList(notes, selectedNoteId, activeFilter, searchTerm, selectedTrashIds = [], trashSelectionMode = false) {
   const filteredNotes = getFilteredNotes(notes, activeFilter, searchTerm);
   const notesListElement = document.getElementById("notesList");
   const noteCountLabel = document.getElementById("noteCountLabel");
   const listTitle = document.getElementById("listTitle");
+  const listHeader = listTitle.closest(".list-header");
 
   listTitle.textContent = getFilterTitle(activeFilter);
+  renderTrashSelectButton(listHeader, filteredNotes, selectedTrashIds, trashSelectionMode);
 
   if (filteredNotes.length === 0) {
     notesListElement.innerHTML = `
@@ -123,26 +125,60 @@ function renderNotesList(notes, selectedNoteId, activeFilter, searchTerm) {
   }
 
   notesListElement.innerHTML = filteredNotes
-    .map((note) => createNoteCardHTML(note, note.id === selectedNoteId))
+    .map((note) => createNoteCardHTML(note, note.id === selectedNoteId, activeFilter, selectedTrashIds, trashSelectionMode))
     .join("");
 
   noteCountLabel.textContent = filteredNotes.length + " " + getNoteWord(filteredNotes.length);
 }
 
-function createNoteCardHTML(note, isActive) {
-  const tagsHTML = note.tags.slice(0, 1).map((tagName) => {
-    const tag = tagDefinitions[tagName];
-    const label = tag?.label || tagName;
+function renderTrashSelectButton(listHeader, filteredNotes, selectedTrashIds, trashSelectionMode) {
+  if (!listHeader) return;
 
-    return `<span class="note-card-tag ${getTagClass(tagName)}"><span class="tag-dot ${getTagClass(tagName)}"></span><span>${escapeHTML(label)}</span></span>`;
-  }).join("");
+  listHeader.querySelectorAll("[data-trash-select]").forEach((button) => button.remove());
+
+  if (activeFilter !== "deleted") return;
+
+  const selectedCount = filteredNotes.filter((note) => selectedTrashIds.includes(note.id)).length;
+  const button = document.createElement("button");
+
+  button.type = "button";
+  button.className = "trash-select-button";
+  button.dataset.trashSelect = "";
+
+  if (!trashSelectionMode) {
+    button.textContent = "Выбрать все";
+  } else if (selectedCount === 0 || selectedCount === filteredNotes.length) {
+    button.textContent = "Удалить все";
+  } else {
+    button.textContent = "Удалить";
+  }
+
+  listHeader.appendChild(button);
+}
+
+function createNoteCardHTML(note, isActive, activeFilter, selectedTrashIds, trashSelectionMode) {
+  const isTrashSelection = activeFilter === "deleted" && trashSelectionMode;
+  const isSelected = selectedTrashIds.includes(note.id);
+  const hasTag = note.tags.length > 0;
+  const tagClass = hasTag ? getTagClass(note.tags[0]) : "";
+  const titleTagHTML = hasTag
+    ? `<span class="note-card-title-tag ${tagClass}"><span class="tag-dot ${tagClass}"></span></span>`
+    : "";
+  const trashSelectCircle = isTrashSelection
+    ? `<span class="trash-select-circle ${isSelected ? "selected" : ""}" data-trash-select-id="${note.id}"></span>`
+    : "";
 
   return `
-    <button class="note-card ${isActive ? "active" : ""}" data-note-id="${note.id}">
-      <div class="note-card-title">${escapeHTML(note.title || "Без названия")}</div>
-      <div class="note-card-date">${formatDate(note.updatedAt)}</div>
-      <div class="note-card-preview">${escapeHTML(getNotePreview(note))}</div>
-      ${tagsHTML}
+    <button class="note-card ${isActive ? "active" : ""} ${isTrashSelection ? "trash-selection" : ""}" data-note-id="${note.id}">
+      ${trashSelectCircle}
+      <div class="note-card-content">
+        <div class="note-card-title">
+          <span>${escapeHTML(note.title || "Без названия")}</span>
+          ${titleTagHTML}
+        </div>
+        <div class="note-card-date">${formatDate(note.updatedAt)}</div>
+        <div class="note-card-preview">${escapeHTML(getNotePreview(note))}</div>
+      </div>
     </button>
   `;
 }

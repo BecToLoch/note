@@ -26,6 +26,20 @@
   letter-spacing: -0.3px;
 }
 
+.trash-select-button {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #f5f5f7;
+  padding: 6px 12px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.trash-select-button:hover {
+  background: #323234;
+}
+
 /* Кнопка "+" как на скрине */
 
 .create-note-button {
@@ -142,12 +156,56 @@
   width: 100%;
   min-height: 92px;
   margin-bottom: 8px;
-  padding: 14px 14px 12px;
-  border: 0;
-  border-radius: 12px;
+  border-radius: 40px;
   background: #2b2b2d;
   color: #f5f5f7;
   text-align: left;
+}
+
+.note-card.trash-selection {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.trash-select-circle {
+  margin-left: 15px;
+  flex: 0 0 auto;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border: 1.5px solid #6c6c70;
+  border-radius: 50%;
+  background: transparent;
+  color: transparent;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.note-card.trash-selection .trash-select-circle {
+  display: flex;
+}
+
+.trash-select-circle.selected {
+  border-color: #34c759;
+  background: #34c759;
+}
+
+.note-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.note-card:not(.trash-selection) .note-card-content {
+  margin-left: 20px;
+}
+
+.note-card.trash-selection .note-card-content {
+  margin-left: 0;
 }
 
 .note-card:hover {
@@ -157,15 +215,30 @@
 /* Выбранная карточка как на скрине */
 
 .note-card.active {
-  background: #4a4522;
   border-left: 3px solid #f7d447;
 }
 
 .note-card-title {
-  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   color: #ffd60a;
   font-size: 15px;
   font-weight: 700;
+}
+
+.note-card-title > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-card-title-tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 50%;
+  margin-right: 20px;
 }
 
 .note-card.active .note-card-title {
@@ -174,7 +247,6 @@
 
 .note-card-date {
   display: block;
-  margin: 0 0 6px;
   color: #c7c7cc;
   font-size: 13px;
 }
@@ -189,30 +261,6 @@
   color: #d1d1d6;
   font-size: 13px;
   line-height: 1.35;
-}
-
-.note-card-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  height: 28px;
-  margin-top: 8px;
-  margin-right: 8px;
-  padding: 0 8px 0 0;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: #d6d6d6;
-  text-align: left;
-  font-size: 13px;
-  font-weight: 400;
-}
-
-.note-card-tag .tag-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  display: inline-block;
 }
 
 .notes-list-footer {
