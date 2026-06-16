@@ -1,215 +1,333 @@
-// Отрисовка интерфейса: боковая панель, список заметок и редактор.
-import { DEFAULT_FOLDER_IDS } from "./config.js";
-import { state } from "./state.js";
-import {
-  $,
-  escapeAttribute,
-  escapeHTML,
-  formatFullDate,
-  formatShortDate,
-  getFolderName,
-  getSectionName,
-  plainText,
-  tagLabel
-} from "./utils.js";
+/* =========================================================
+   Отрисовка интерфейса
+   ========================================================= */
 
-export function renderAll() {
-  ensureSelectedNote();
-  renderSidebar();
-  renderNotesList();
-  renderEditor();
+/*
+  Защищает текст от вставки HTML-кода.
+  Это важно, если пользователь введет специальные символы.
+*/
+function escapeHTML(text) {
+  return String(text)
+    .replace(/&/g, "\x26amp;")
+    .replace(/</g, "\x3clt;")
+    .replace(/>/g, "\x3egt;")
+    .replace(/"/g, "\x22quot;")
+    .replace(/'/g, "\x27#039;");
 }
 
-export function renderSidebar() {
-  const activeNotes = getActiveNotes();
-  const deletedNotes = getDeletedNotes();
+/*
+  Считает заметки для разных фильтров:
+  - все активные заметки;
+  - папки Notes/Work;
+  - Recently Deleted;
+  - теги.
+*/
+function renderSidebarCounts(notes) {
+  const activeNotes = notes.filter((note) => !note.deletedAt);
+  const deletedNotes = notes.filter((note) => note.deletedAt);
 
-  $("countAll").textContent = activeNotes.length;
-  $("countNotes").textContent = activeNotes.filter((note) => note.folder === "notes").length;
-  $("countIdeas").textContent = activeNotes.filter((note) => note.folder === "ideas").length;
-  $("countWork").textContent = activeNotes.filter((note) => note.folder === "work").length;
-  $("countTrash").textContent = deletedNotes.length;
+  const folderNames = ["Notes", "Work"];
+  const tagNames = tagOrder;
 
-  $("countImportant").textContent = countByTag("important");
-  $("countIdea").textContent = countByTag("idea");
-  $("countPersonal").textContent = countByTag("personal");
-  $("countLearning").textContent = countByTag("learning");
-  $("countPlans").textContent = countByTag("plans");
-  $("countAllTags").textContent = activeNotes.reduce((sum, note) => sum + note.tags.length, 0);
+  document.getElementById("countAll").textContent = activeNotes.length;
+  document.getElementById("countDeleted").textContent = deletedNotes.length;
+  document.getElementById("totalNotes").textContent = activeNotes.length;
 
-  document.querySelectorAll("[data-folder]").forEach((button) => {
-    button.classList.toggle("active", state.selectedFolder === button.dataset.folder && !state.selectedTag);
+  folderNames.forEach((folderName) => {
+    const countElement = document.getElementById("count" + folderName);
+
+    if (countElement) {
+      const folderNotes = activeNotes.filter((note) => note.folder === folderName);
+
+      /*
+        В папке Notes показываем только маркированные заметки.
+      */
+      const visibleCount =
+        folderName === "Notes"
+          ? folderNotes.filter((note) => isBulletNote(note)).length
+          : folderNotes.length;
+
+      countElement.textContent = visibleCount;
+    }
   });
 
-  document.querySelectorAll("[data-tag]").forEach((button) => {
-    button.classList.toggle("active", state.selectedTag === button.dataset.tag);
+  const tagCounts = {
+    countRecipe: "recipe",
+    countTravel: "travel",
+    countReading: "reading",
+    countHome: "home",
+    countWorkTag: "work",
+    countIdeas: "ideas",
+    countFinance: "finance"
+  };
+
+  Object.entries(tagCounts).forEach(([elementId, tagName]) => {
+    const countElement = document.getElementById(elementId);
+
+    if (countElement) {
+      const count = activeNotes.filter((note) => note.tags.includes(tagName)).length;
+
+      countElement.textContent = count;
+      countElement.hidden = count === 0;
+    }
   });
 
-  renderCustomFolders();
+  renderSidebarTags(notes);
 }
 
-export function renderCustomFolders() {
-  const customFolders = state.folders.filter((folder) => !DEFAULT_FOLDER_IDS.includes(folder.id));
-  const container = $("customFolders");
+/*
+  Отрисовывает теги в левой колонке.
+*/
+function renderSidebarTags(notes) {
+  const tagsListElement = document.getElementById("tagsList");
 
-  container.innerHTML = customFolders
-    .map((folder) => {
-      const count = getActiveNotes().filter((note) => note.folder === folder.id).length;
-      const active = state.selectedFolder === folder.id && !state.selectedTag;
+  if (!tagsListElement) return;
+
+  const activeNotes = notes.filter((note) => !note.deletedAt);
+  const usedTagNames = tagOrder.filter((tagName) =>
+    activeNotes.some((note) => note.tags.includes(tagName))
+  );
+
+  tagsListElement.innerHTML = usedTagNames
+    .map((tagName) => {
+      const tag = tagDefinitions[tagName];
+      const count = activeNotes.filter((note) => note.tags.includes(tagName)).length;
 
       return `
-        <button class="folder-item ${active ? "active" : ""}" data-folder="${escapeAttribute(folder.id)}">
-          <span class="custom-folder-icon" style="background:${escapeAttribute(folder.color)}"></span>
-          <span>${escapeHTML(folder.name)}</span>
-          <span class="count">${count}</span>
+        <button class="tag-sidebar-item" data-filter="tag:${tagName}">
+          <span class="tag-dot ${getTagClass(tagName)}"></span>
+          <span>${escapeHTML(tag.label)}</span>
+          <span class="sidebar-count">${count}</span>
         </button>
       `;
     })
     .join("");
 }
 
-export function renderNotesList() {
-  ensureSelectedNote();
+/*
+  Возвращает заметки, которые нужно показать в средней колонке.
+  Учитывает выбранную папку/тег, поиск и Recently Deleted.
+*/
+function getFilteredNotes(notes, activeFilter, searchTerm) {
+  const normalizedSearch = normalizeText(searchTerm);
 
-  const notes = getVisibleNotes();
-  const container = $("notesList");
-  container.innerHTML = "";
+  return notes
+    .filter((note) => {
+      /*
+        Если выбран Recently Deleted, показываем только удаленные.
+        Иначе показываем только активные.
+      */
+      if (activeFilter === "deleted") {
+        if (!note.deletedAt) return false;
+      } else if (note.deletedAt) {
+        return false;
+      }
 
-  if (notes.length === 0) {
-    container.innerHTML = `
+      /*
+        Фильтр по папке.
+        Например: folder:Notes.
+      */
+      if (activeFilter.startsWith("folder:")) {
+        const folderName = activeFilter.replace("folder:", "");
+
+        if (note.folder !== folderName) return false;
+
+        /*
+          В папке Notes показываем только заметки с маркированным списком.
+        */
+        if (folderName === "Notes" && !isBulletNote(note)) return false;
+      }
+
+      /*
+        Фильтр по тегу.
+        Например: tag:finance.
+      */
+      if (activeFilter.startsWith("tag:")) {
+        const tagName = activeFilter.replace("tag:", "");
+
+        if (!note.tags.includes(tagName)) return false;
+      }
+
+      /*
+        Поиск по заголовку, тексту и тегам.
+      */
+      if (normalizedSearch) {
+        const searchableText = normalizeText(note.title + " " + note.body + " " + note.tags.join(" "));
+
+        if (!searchableText.includes(normalizedSearch)) return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+/*
+  Отрисовывает список заметок в средней колонке.
+*/
+function renderNotesList(notes, selectedNoteId, activeFilter, searchTerm) {
+  const filteredNotes = getFilteredNotes(notes, activeFilter, searchTerm);
+  const notesListElement = document.getElementById("notesList");
+  const noteCountLabel = document.getElementById("noteCountLabel");
+  const listTitle = document.getElementById("listTitle");
+
+  listTitle.textContent = getFilterTitle(activeFilter);
+
+  if (filteredNotes.length === 0) {
+    notesListElement.innerHTML = `
       <div class="empty-list">
-        <div>📝</div>
-        <h3>Нет заметок</h3>
-        <p>Создайте новую заметку или измените фильтр.</p>
+        Нет заметок
       </div>
     `;
+    noteCountLabel.textContent = "0 Notes";
     return;
   }
 
-  const groups = groupNotesByDate(notes);
+  notesListElement.innerHTML = filteredNotes
+    .map((note) => createNoteCardHTML(note, note.id === selectedNoteId))
+    .join("");
 
-  Object.keys(groups).forEach((groupName) => {
-    const title = document.createElement("div");
-    title.className = "list-section-title";
-    title.textContent = groupName;
-    container.appendChild(title);
-
-    groups[groupName].forEach((note) => {
-      const card = document.createElement("button");
-      card.className = `note-card ${note.id === state.selectedNoteId ? "active" : ""}`;
-      card.innerHTML = `
-        <h3>${escapeHTML(note.title)}</h3>
-        <p>${escapeHTML(plainText(note.body).slice(0, 90))}</p>
-        <div class="note-card-footer">
-          <span class="note-preview">${note.tags.map(tagLabel).join(" ")}</span>
-          <span>${formatShortDate(note.updatedAt)}</span>
-        </div>
-      `;
-
-      card.addEventListener("click", () => {
-        state.selectedNoteId = note.id;
-        renderAll();
-      });
-
-      container.appendChild(card);
-    });
-  });
+  noteCountLabel.textContent =
+    filteredNotes.length + " " + getNoteWord(filteredNotes.length);
 }
 
-export function renderEditor() {
-  const note = getSelectedNote();
+/*
+  Создает HTML одной карточки заметки.
+*/
+function createNoteCardHTML(note, isActive) {
+  const firstTag = getFirstTag(note);
+  const tagClass = firstTag ? getTagClass(firstTag) : "";
+  const tagColor = tagColors[firstTag] || "#30d158";
+  const tagHTML = firstTag
+    ? `<span class="note-card-tag ${tagClass}" style="background: ${hexToRgba(tagColor, 0.16)}; color: ${tagColor};">${escapeHTML(firstTag)}</span>`
+    : "";
+
+  return `
+    <button class="note-card ${isActive ? "active" : ""}" data-note-id="${note.id}">
+      <div class="note-card-title">${escapeHTML(note.title || "Без названия")}</div>
+      <div class="note-card-date">${formatDate(note.updatedAt)}</div>
+      <div class="note-card-preview">${escapeHTML(getNotePreview(note))}</div>
+      ${tagHTML}
+    </button>
+  `;
+}
+
+/*
+  Отрисовывает теги в правой колонке.
+*/
+function renderEditorTags(note) {
+  const editorTagsElement = document.getElementById("editorTags");
 
   if (!note) {
-    $("titleInput").value = "";
-    $("bodyEditor").innerHTML = "";
-    $("editorDate").textContent = "Нет заметки";
-    $("editorFolder").textContent = "";
-    $("titleInput").disabled = true;
-    $("bodyEditor").contentEditable = "false";
-    $("bodyEditor").classList.remove("is-locked");
+    editorTagsElement.innerHTML = "";
     return;
   }
 
-  $("titleInput").disabled = note.locked;
-  $("bodyEditor").contentEditable = note.locked ? "false" : "true";
-  $("bodyEditor").classList.toggle("is-locked", note.locked);
-  $("titleInput").value = note.title;
-  $("bodyEditor").innerHTML = note.locked
-    ? `<div class="locked-message">🔒 Эта заметка заблокирована. Нажмите 🔒 в панели инструментов, чтобы ввести пароль.</div>`
-    : note.body;
-  $("editorDate").textContent = formatFullDate(note.updatedAt);
-  $("editorFolder").textContent = getFolderName(state.folders, note.folder);
+  editorTagsElement.innerHTML = note.tags
+    .map((tagName) => {
+      const tag = tagDefinitions[tagName];
+      const color = tag?.color || "#30d158";
+      const label = tag?.label || tagName;
+
+      return `
+        <button class="editor-tag ${getTagClass(tagName)}" data-tag="${escapeHTML(tagName)}" style="background: ${hexToRgba(color, 0.16)}; color: ${color};">
+          ${escapeHTML(label)}
+        </button>
+      `;
+    })
+    .join("");
 }
 
-export function ensureSelectedNote() {
-  const visibleNotes = getVisibleNotes();
+/*
+  Заполняет поля редактора данными выбранной заметки.
+*/
+function renderEditor(note) {
+  const titleInput = document.getElementById("noteTitleInput");
+  const bodyEditor = document.getElementById("noteBodyEditor");
 
-  if (visibleNotes.length > 0 && !visibleNotes.some((note) => note.id === state.selectedNoteId)) {
-    state.selectedNoteId = visibleNotes[0].id;
+  if (!note) {
+    titleInput.value = "";
+    bodyEditor.innerHTML = "";
+    titleInput.placeholder = "Без названия";
+    return;
   }
 
-  if (!state.selectedNoteId) {
-    const fallback = getActiveNotes()[0] || getDeletedNotes()[0];
-    state.selectedNoteId = fallback ? fallback.id : null;
+  titleInput.value = note.title || "";
+  bodyEditor.innerHTML = note.body.includes("<")
+    ? note.body
+    : plainTextToHTML(note.body);
+
+  titleInput.placeholder = "Без названия";
+
+  // Render tags only if the container exists (it was removed per requirements)
+  const editorTagsEl = document.getElementById("editorTags");
+  if (editorTagsEl) {
+    renderEditorTags(note);
   }
 }
 
-export function getVisibleNotes() {
-  const query = $("searchInput") ? $("searchInput").value.trim().toLowerCase() : "";
-  let notes;
+/*
+  Показывает текущую дату в верхней строке.
+*/
+function renderCurrentDate() {
+  const currentDateElement = document.getElementById("currentDate");
+  const now = new Date();
 
-  if (state.selectedFolder === "trash") {
-    notes = getDeletedNotes();
-  } else {
-    notes = getActiveNotes();
-
-    if (state.selectedFolder !== "all") {
-      notes = notes.filter((note) => note.folder === state.selectedFolder);
-    }
-
-    if (state.selectedTag) {
-      notes = notes.filter((note) => note.tags.includes(state.selectedTag));
-    }
-  }
-
-  if (query) {
-    notes = notes.filter((note) => {
-      const bodyText = plainText(note.body).toLowerCase();
-      return note.title.toLowerCase().includes(query) || bodyText.includes(query);
-    });
-  }
-
-  return notes.sort((a, b) => b.updatedAt - a.updatedAt);
-}
-
-export function getActiveNotes() {
-  return state.notes.filter((note) => !note.deletedAt);
-}
-
-export function getDeletedNotes() {
-  return state.notes.filter((note) => note.deletedAt);
-}
-
-export function getSelectedNote() {
-  return state.notes.find((note) => note.id === state.selectedNoteId) || null;
-}
-
-export function countByTag(tag) {
-  return getActiveNotes().filter((note) => note.tags.includes(tag)).length;
-}
-
-export function groupNotesByDate(notes) {
-  const groups = {};
-
-  notes.forEach((note) => {
-    const groupName = getSectionName(note.updatedAt);
-
-    if (!groups[groupName]) {
-      groups[groupName] = [];
-    }
-
-    groups[groupName].push(note);
+  currentDateElement.textContent = now.toLocaleString("ru-RU", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
   });
+}
 
-  return groups;
+/*
+  Обновляет активную кнопку в левой колонке.
+*/
+function renderActiveFilter(activeFilter) {
+  document.querySelectorAll("[data-filter]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.filter === activeFilter);
+  });
+}
+
+/*
+  Возвращает заголовок средней колонки для выбранного фильтра.
+*/
+function getFilterTitle(activeFilter) {
+  if (activeFilter === "all") return "All Notes";
+  if (activeFilter === "deleted") return "Recently Deleted";
+  if (activeFilter.startsWith("folder:")) return activeFilter.replace("folder:", "");
+  if (activeFilter.startsWith("tag:")) {
+    const tagName = activeFilter.replace("tag:", "");
+
+    return tagLabels[tagName] || tagName;
+  }
+
+  return "Notes";
+}
+
+/*
+  Возвращает правильное слово "Note/Notes" для английской подписи.
+*/
+function getNoteWord(count) {
+  return count === 1 ? "Note" : "Notes";
+}
+
+/*
+  Переводит HEX-цвет в RGBA.
+  Нужно для полупрозрачного фона тегов.
+*/
+function getTagClass(tagName) {
+  return "tag-" + tagName;
+}
+
+function hexToRgba(hex, alpha) {
+  const normalizedHex = hex.replace("#", "");
+  const red = parseInt(normalizedHex.slice(0, 2), 16);
+  const green = parseInt(normalizedHex.slice(2, 4), 16);
+  const blue = parseInt(normalizedHex.slice(4, 6), 16);
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }

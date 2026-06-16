@@ -3,262 +3,306 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Заметки — v1</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>Notes App</title>
+  
+  <!-- Подключаем стили приложения -->
+  <link rel="stylesheet" href="./css/base.css" />
+  <link rel="stylesheet" href="./css/layout.css" />
+  <link rel="stylesheet" href="./css/sidebar.css" />
+  <link rel="stylesheet" href="./css/notes-list.css" />
+  <link rel="stylesheet" href="./css/editor.css" />
+  <link rel="stylesheet" href="./css/modal.css" />
+  <link rel="stylesheet" href="./css/responsive.css" />
 </head>
 <body>
-  <div class="app">
-    <!-- Верхняя панель как в macOS -->
-    <header class="window-bar">
-      <div class="traffic-lights">
-        <span class="red"></span>
-        <span class="yellow"></span>
-        <span class="green"></span>
+  <!-- Главное окно приложения -->
+  <main class="app" id="app">
+    <!-- Левая колонка: папки и теги -->
+    <aside class="sidebar">
+      <div class="sidebar-title">Notes</div>
+      
+      <!-- Блок iCloud -->
+      <section class="sidebar-section">
+        <div class="sidebar-section-title">ICLOUD</div>
+        
+        <!-- Кнопки папок. data-filter задает фильтр списка заметок -->
+        <button class="sidebar-item active" data-filter="all">
+          <span class="sidebar-icon">📁</span>
+          <span>All Notes</span>
+          <span class="sidebar-count" id="countAll">0</span>
+        </button>
+        
+        <button class="sidebar-item" data-filter="folder:Notes">
+          <span class="sidebar-icon">📁</span>
+          <span>Notes</span>
+          <span class="sidebar-count" id="countNotes">0</span>
+        </button>
+        
+        <button class="sidebar-item" data-filter="folder:Work">
+          <span class="sidebar-icon">📁</span>
+          <span>Work</span>
+          <span class="sidebar-count" id="countWork">0</span>
+        </button>
+        
+        <button class="sidebar-item" data-filter="deleted">
+          <span class="sidebar-icon">🗑️</span>
+          <span>Recently Deleted</span>
+          <span class="sidebar-count" id="countDeleted">0</span>
+        </button>
+      </section>
+      
+      <!-- Блок тегов -->
+      <section class="sidebar-section">
+        <div class="sidebar-section-title">TAGS</div>
+        
+        <button class="tag-sidebar-item" data-filter="tag:recipe">
+          <span class="tag-dot tag-recipe"></span>
+          <span>recipe</span>
+          <span class="sidebar-count" id="countRecipe">0</span>
+        </button>
+        
+        <button class="tag-sidebar-item" data-filter="tag:travel">
+          <span class="tag-dot tag-travel"></span>
+          <span>travel</span>
+          <span class="sidebar-count" id="countTravel">0</span>
+        </button>
+        
+        <button class="tag-sidebar-item" data-filter="tag:reading">
+          <span class="tag-dot tag-reading"></span>
+          <span>reading</span>
+          <span class="sidebar-count" id="countReading">0</span>
+        </button>
+        
+        <button class="tag-sidebar-item" data-filter="tag:home">
+          <span class="tag-dot tag-home"></span>
+          <span>home</span>
+          <span class="sidebar-count" id="countHome">0</span>
+        </button>
+        
+        <button class="tag-sidebar-item" data-filter="tag:work">
+          <span class="tag-dot tag-work"></span>
+          <span>work</span>
+          <span class="sidebar-count" id="countWorkTag">0</span>
+        </button>
+        
+        <button class="tag-sidebar-item" data-filter="tag:ideas">
+          <span class="tag-dot tag-ideas"></span>
+          <span>ideas</span>
+          <span class="sidebar-count" id="countIdeas">0</span>
+        </button>
+        
+        <button class="tag-sidebar-item" data-filter="tag:finance">
+          <span class="tag-dot tag-finance"></span>
+          <span>finance</span>
+          <span class="sidebar-count" id="countFinance">0</span>
+        </button>
+      </section>
+      
+      <!-- Нижняя строка левой колонки -->
+       <div class="sidebar-footer">
+       <button class="create-note-button" id="createNoteButton" title="Создать заметку">
+         <span class="icon">+</span>
+         <span class="new-note-text">Новая запись</span>
+       </button>
+       <div class="totalNotes">
+         iCloud · <span id="totalNotes">0</span> notes · 48 KB
+       </div>
+       </div>
+    </aside>
+    
+    <!-- Средняя колонка: список заметок -->
+    <section class="notes-list-panel">
+       <!-- Заголовок средней колонки -->
+       <div class="list-header">
+         <h2 id="listTitle">Notes</h2>
+       </div>
+       
+      <!-- Поиск по заметкам -->
+      <div class="search-box">
+        <span>🔍</span>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search"
+          autocomplete="off"
+        />
       </div>
-      <div class="window-title">Заметки</div>
-    </header>
-
-    <main class="main-layout">
-      <!-- Левая боковая панель -->
-      <aside class="sidebar">
-        <div class="sidebar-top">
-          <button class="icon-btn" id="newFolderBtn" title="Новая папка">📁</button>
-          <button class="icon-btn" id="settingsBtn" title="Настройки">⚙</button>
+      
+      <!-- Список найденных/выбранных заметок -->
+      <div class="notes-list" id="notesList"></div>
+      
+      <!-- Нижняя строка средней колонки -->
+      <div class="notes-list-footer">
+        <span id="noteCountLabel">1 Note</span>
+      </div>
+    </section>
+    
+    <!-- Правая колонка: просмотр и редактирование заметки -->
+    <section class="editor-panel">
+      <!-- Верхняя строка редактора -->
+      <div class="editor-toolbar">
+        <div class="editor-time">
+          <span>🕘</span>
+          <span id="currentDate">среда, 3 июня 2026 г. в 19:00</span>
         </div>
-
-        <div class="section-title">iCloud</div>
-
-        <button class="folder-item active" data-folder="all">
-          <span class="folder-icon cloud">☁️</span>
-          <span>Все iCloud</span>
-          <span class="count" id="countAll">0</span>
+        
+        <div class="editor-actions">
+          <!-- Кнопка добавления тега -->
+        <button class="toolbar-button" id="tagButton" title="Теги">
+          🏷️
         </button>
-
-        <button class="folder-item" data-folder="notes">
-          <span class="folder-icon yellow-folder">📝</span>
-          <span>Заметки</span>
-          <span class="count" id="countNotes">0</span>
-        </button>
-
-        <button class="folder-item" data-folder="ideas">
-          <span class="folder-icon blue-folder">💡</span>
-          <span>Идеи</span>
-          <span class="count" id="countIdeas">0</span>
-        </button>
-
-        <button class="folder-item" data-folder="work">
-          <span class="folder-icon green-folder">💼</span>
-          <span>Работа</span>
-          <span class="count" id="countWork">0</span>
-        </button>
-
-        <button class="folder-item" data-folder="trash">
-          <span class="folder-icon gray-folder">🗑</span>
-          <span>Недавно удаленные</span>
-          <span class="count" id="countTrash">0</span>
-        </button>
-
-        <div id="customFolders"></div>
-
-        <div class="section-title">Теги</div>
-
-        <button class="tag-item" data-tag="important">
-          <span class="tag-dot red-dot"></span>
-          <span>Важно</span>
-          <span class="count" id="countImportant">0</span>
-        </button>
-
-        <button class="tag-item" data-tag="idea">
-          <span class="tag-dot yellow-dot"></span>
-          <span>Идеи</span>
-          <span class="count" id="countIdea">0</span>
-        </button>
-
-        <button class="tag-item" data-tag="personal">
-          <span class="tag-dot blue-dot"></span>
-          <span>Личное</span>
-          <span class="count" id="countPersonal">0</span>
-        </button>
-
-        <button class="tag-item" data-tag="learning">
-          <span class="tag-dot green-dot"></span>
-          <span>Учёба</span>
-          <span class="count" id="countLearning">0</span>
-        </button>
-
-        <button class="tag-item" data-tag="plans">
-          <span class="tag-dot purple-dot"></span>
-          <span>Планы</span>
-          <span class="count" id="countPlans">0</span>
-        </button>
-
-        <button class="tag-item" data-tag="all-tags">
-          <span class="tag-dot gray-dot"></span>
-          <span>Все теги...</span>
-          <span class="count" id="countAllTags">0</span>
-        </button>
-
-        <div class="sidebar-bottom">
-          <button class="new-folder-text" id="newFolderTextBtn">Новая папка</button>
+          
+          <!-- Кнопка форматирования текста -->
+          <button class="toolbar-button" id="formatButton" title="Форматировать текст">
+            T
+          </button>
+          
+          <!-- Кнопка удаления -->
+          <button class="toolbar-button danger" id="deleteButton" title="Удалить заметку">
+            🗑️
+          </button>
         </div>
-      </aside>
+      </div>
 
-      <!-- Список заметок -->
-      <section class="notes-list-panel">
-        <div class="search-box">
-          <span>🔎</span>
-          <input id="searchInput" type="search" placeholder="Поиск" />
-          <button class="icon-btn small" id="clearSearchBtn" title="Очистить поиск">×</button>
-        </div>
+      <!-- Всплывающий список тегов -->
+      <div class="tag-popover hidden" id="tagPopover">
+        <div class="tag-popover-title">ТЕГИ</div>
 
-        <div class="notes-list" id="notesList"></div>
-      </section>
+        <button class="tag-popover-item" data-filter="tag:recipe">
+          <span class="tag-dot tag-recipe"></span>
+          <span>recipe</span>
+        </button>
+        <button class="tag-popover-item" data-filter="tag:travel">
+          <span class="tag-dot tag-travel"></span>
+          <span>travel</span>
+        </button>
+        <button class="tag-popover-item" data-filter="tag:reading">
+          <span class="tag-dot tag-reading"></span>
+          <span>reading</span>
+        </button>
+        <button class="tag-popover-item" data-filter="tag:home">
+          <span class="tag-dot tag-home"></span>
+          <span>home</span>
+        </button>
+        <button class="tag-popover-item" data-filter="tag:work">
+          <span class="tag-dot tag-work"></span>
+          <span>work</span>
+        </button>
+        <button class="tag-popover-item" data-filter="tag:ideas">
+          <span class="tag-dot tag-ideas"></span>
+          <span>ideas</span>
+        </button>
+        <button class="tag-popover-item" data-filter="tag:finance">
+          <span class="tag-dot tag-finance"></span>
+          <span>finance</span>
+        </button>
+      </div>
 
-      <!-- Редактор -->
-      <section class="editor-panel">
-        <div class="editor-toolbar">
-          <button class="toolbar-btn" id="newNoteBtn" title="Новая заметка">＋</button>
-          <button class="toolbar-btn" id="deleteNoteBtn" title="Удалить заметку">🗑</button>
-          <button class="toolbar-btn" id="lockNoteBtn" title="Заблокировать заметку">🔒</button>
-          <button class="toolbar-btn" id="boldBtn" title="Жирный"><b>B</b></button>
-          <button class="toolbar-btn" id="italicBtn" title="Курсив"><i>I</i></button>
-          <button class="toolbar-btn" id="underlineBtn" title="Подчеркнутый"><u>U</u></button>
-          <button class="toolbar-btn" id="strikeBtn" title="Зачеркнутый"><s>S</s></button>
-          <button class="toolbar-btn" id="bulletListBtn" title="Список">•≡</button>
-          <button class="toolbar-btn" id="alignLeftBtn" title="По левому краю">≡</button>
-          <button class="toolbar-btn" id="shareBtn" title="Поделиться">↗</button>
-          <button class="toolbar-btn" id="exportBtn" title="Экспорт">⇩</button>
-          <button class="toolbar-btn" id="searchInNoteBtn" title="Найти в заметке">🔎</button>
-        </div>
-
-        <div class="editor-meta">
-          <span id="editorDate">20 мая 2024 г. в 09:41</span>
-          <span id="editorFolder">Заметки</span>
-        </div>
-
-        <div class="editor-content">
-          <input id="titleInput" class="title-input" value="Идеи для проекта" />
-          <div id="bodyEditor" class="body-editor" contenteditable="true"></div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <!-- Модалки и панели по макету -->
-  <div class="modal-backdrop hidden" id="modalBackdrop"></div>
-
-  <section class="modal-card hidden" id="newNoteModal">
-    <h2>Новая заметка</h2>
-    <input id="newNoteTitle" placeholder="Название" />
-    <textarea id="newNoteBody" placeholder="Начните писать..."></textarea>
-    <div class="modal-actions">
-      <button class="btn ghost" data-close-modal>Отменить</button>
-      <button class="btn yellow" id="createNoteBtn">Создать</button>
-    </div>
-  </section>
-
-  <section class="modal-card hidden" id="newFolderModal">
-    <h2>Новая папка</h2>
-    <input id="newFolderName" placeholder="Название папки" />
-    <div class="color-row">
-      <span class="color-dot selected" data-color="#f5c542"></span>
-      <span class="color-dot" data-color="#ff5f57"></span>
-      <span class="color-dot" data-color="#ff9f0a"></span>
-      <span class="color-dot" data-color="#30d158"></span>
-      <span class="color-dot" data-color="#0a84ff"></span>
-      <span class="color-dot" data-color="#bf5af2"></span>
-      <span class="color-dot" data-color="#64d2ff"></span>
-      <span class="color-dot" data-color="#8e8e93"></span>
-    </div>
-    <div class="modal-actions">
-      <button class="btn ghost" data-close-modal>Отменить</button>
-      <button class="btn yellow" id="createFolderBtn">Создать</button>
-    </div>
-  </section>
-
-  <section class="modal-card hidden" id="deleteModal">
-    <div class="delete-icon">🗑</div>
-    <h2>Подтверждение удаления</h2>
-    <p>Вы уверены, что хотите удалить эту заметку?</p>
-    <div class="modal-actions">
-      <button class="btn ghost" data-close-modal>Отменить</button>
-      <button class="btn danger" id="confirmDeleteBtn">Удалить</button>
-    </div>
-  </section>
-
-  <section class="modal-card hidden" id="exportModal">
-    <h2>Экспорт</h2>
-    <label>Формат</label>
-    <select id="exportFormat">
-      <option>PDF</option>
-      <option>Markdown</option>
-      <option>TXT</option>
-      <option>HTML</option>
-    </select>
-    <div class="modal-actions">
-      <button class="btn ghost" data-close-modal>Отменить</button>
-      <button class="btn yellow" id="downloadExportBtn">Экспорт</button>
-    </div>
-  </section>
-
-  <section class="modal-card hidden" id="lockModal">
-    <div class="lock-icon">🔒</div>
-    <h2>Блокировка заметки</h2>
-    <p>Эта заметка заблокирована. Введите пароль для просмотра.</p>
-    <input id="lockPassword" type="password" placeholder="Пароль" />
-    <div class="modal-actions">
-      <button class="btn ghost" data-close-modal>Отменить</button>
-      <button class="btn yellow" id="unlockNoteBtn">Разблокировать</button>
-    </div>
-  </section>
-
-  <section class="modal-card hidden" id="passwordModal">
-    <h2>Установка пароля</h2>
-    <input id="passwordNew" type="password" placeholder="Новый пароль" />
-    <input id="passwordRepeat" type="password" placeholder="Повторите пароль" />
-    <small>Пароль должен содержать минимум 6 символов.</small>
-    <div class="modal-actions">
-      <button class="btn ghost" data-close-modal>Отменить</button>
-      <button class="btn yellow" id="savePasswordBtn">Установить</button>
-    </div>
-  </section>
-
-  <section class="modal-card hidden" id="settingsModal">
-    <h2>Настройки</h2>
-    <div class="settings-row">
-      <span>Запуск при входе в систему</span>
-      <label class="switch"><input id="launchSwitch" type="checkbox" checked /><span></span></label>
-    </div>
-    <div class="settings-row">
-      <span>Проверять обновления автоматически</span>
-      <label class="switch"><input id="updateSwitch" type="checkbox" checked /><span></span></label>
-    </div>
-    <div class="settings-row">
-      <span>Сохранять заметки в iCloud</span>
-      <label class="switch"><input id="cloudSwitch" type="checkbox" checked /><span></span></label>
-    </div>
-    <div class="modal-actions">
-      <button class="btn ghost" data-close-modal>Отменить</button>
-      <button class="btn yellow" id="saveSettingsBtn">Сохранить</button>
-    </div>
-  </section>
-
-  <section class="modal-card hidden" id="aboutModal">
-    <div class="about-logo">📝</div>
-    <h2>Заметки</h2>
-    <p>Версия 1.0 (100)</p>
-    <small>© 2024 Apple Inc. Все права защищены.</small>
-  </section>
-
-  <section class="modal-card hidden" id="shortcutsModal">
-    <h2>Сочетания клавиш</h2>
-    <div class="shortcut-row"><span>Новая заметка</span><kbd>⌘ N</kbd></div>
-    <div class="shortcut-row"><span>Новая папка</span><kbd>⇧ ⌘ N</kbd></div>
-    <div class="shortcut-row"><span>Поиск</span><kbd>⌘ F</kbd></div>
-    <div class="shortcut-row"><span>Удалить заметку</span><kbd>⌫</kbd></div>
-    <div class="shortcut-row"><span>Настройки</span><kbd>⌘ ,</kbd></div>
-  </section>
-
-  <script src="app.js"></script>
+      <!-- Всплывающее меню форматирования как на макете -->
+      <div class="format-popover hidden" id="formatPopover">
+        <div class="popover-section-title">СТИЛЬ</div>
+        
+        <button class="format-menu-item" data-format="heading">
+          <span class="format-icon">T</span>
+          <span>Заголовок</span>
+        </button>
+        
+        <button class="format-menu-item" data-format="bold">
+          <span class="format-icon">B</span>
+          <span>Жирный</span>
+        </button>
+        
+        <button class="format-menu-item" data-format="italic">
+          <span class="format-icon">I</span>
+          <span>Курсив</span>
+        </button>
+        
+        <button class="format-menu-item" data-format="underline">
+          <span class="format-icon">U</span>
+          <span>Подчёркнутый</span>
+        </button>
+        
+        <button class="format-menu-item" data-format="strikethrough">
+          <span class="format-icon">S</span>
+          <span>Зачёркнутый</span>
+        </button>
+        
+        <div class="popover-divider"></div>
+        
+        <div class="popover-section-title">ВЫРАВНИВАНИЕ</div>
+        
+        <button class="format-menu-item" data-format="align-left">
+          <span class="format-icon">☰</span>
+          <span>По левому краю</span>
+        </button>
+        
+        <button class="format-menu-item" data-format="align-center">
+          <span class="format-icon">≡</span>
+          <span>По центру</span>
+        </button>
+        
+        <button class="format-menu-item" data-format="align-right">
+          <span class="format-icon">☰</span>
+          <span>По правому краю</span>
+        </button>
+        
+        <div class="popover-divider"></div>
+        
+        <div class="popover-section-title">СПИСКИ</div>
+        
+        <button class="format-menu-item" data-format="bullet-list">
+          <span class="format-icon">•≡</span>
+          <span>Маркированный список</span>
+        </button>
+        
+        <button class="format-menu-item" data-format="numbered-list">
+          <span class="format-icon">1≡</span>
+          <span>Нумерованный список</span>
+        </button>
+      </div>
+      
+      <!-- Теги текущей заметки -->
+       <!-- editor-tags removed as per requirements -->
+      
+      <!-- Поле заголовка заметки -->
+      <input
+        class="note-title-input"
+        id="noteTitleInput"
+        value="Gift ideas — Mom's birthday"
+        spellcheck="false"
+      />
+      
+      <!-- Редактируемая область текста заметки -->
+      <div
+        class="note-body-editor"
+        id="noteBodyEditor"
+        contenteditable="true"
+        spellcheck="false"
+        data-placeholder="Начните ввод заметки..."
+      >
+        <p>August 14th!</p>
+        <p>Ideas:</p>
+        <ul>
+          <li>Le Creuset Dutch oven (she's been hinting)</li>
+          <li>Weekend at a winery in Sonoma</li>
+          <li>Fancy olive oil + cookbook set</li>
+          <li>SpaFinder gift card</li>
+          <li>Custom photo book from last summer's trip</li>
+        </ul>
+        <p>Budget: ~$200</p>
+        <p>Order deadline: August 7 (shipping buffer)</p>
+      </div>
+    </section>
+  </main>
+  
+  <!-- Модальное окно для выбора папки/тега -->
+   <!-- modal removed as per requirements -->
+  
+  <!-- Подключаем JavaScript-файлы -->
+  <script src="./js/data.js"></script>
+  <script src="./js/storage.js"></script>
+  <script src="./js/render.js"></script>
+  <script src="./js/format.js"></script>
+  <script src="./js/app.js"></script>
 </body>
 </html>

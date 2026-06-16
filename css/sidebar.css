@@ -1,214 +1,128 @@
+/* =========================================================
+   Левая колонка: папки и теги
+   ========================================================= */
+
 .sidebar {
-  min-width: 0;
-  padding: 14px 12px;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(12, 14, 17, 0.78);
-  overflow: auto;
-}
-
-.sidebar-top {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.folder-item,
-.tag-item,
-.new-folder-text {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  border: 0;
-  border-radius: 10px;
-  padding: 8px 9px;
-  background: transparent;
-  color: var(--text);
-  text-align: left;
-}
-
-.folder-item:hover,
-.tag-item:hover,
-.new-folder-text:hover {
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.folder-item.active,
-.tag-item.active {
-  background: rgba(245, 197, 66, 0.18);
-}
-
-.custom-folder-icon {
-  width: 12px;
-  height: 12px;
-  flex: 0 0 auto;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-}
-
-.count {
-  margin-left: auto;
-  color: var(--muted-2);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.folder-icon {
-  width: 18px;
-  flex: 0 0 auto;
-  text-align: center;
-  font-size: 16px;
-}
-
-.sidebar-bottom {
-  padding-top: 16px;
-}
-
-.new-folder-text {
-  justify-content: center;
-  color: var(--muted);
-  border: 1px dashed rgba(255, 255, 255, 0.16);
-}
-
-.notes-list-panel {
-  min-width: 0;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(18, 20, 24, 0.72);
+  min-width: 0;
+  background: #101011;
+  border-right: 1px solid #2b2b2d;
+  padding: 18px 14px 12px;
 }
 
-.search-box {
-  display: flex;
+.sidebar-title {
+  padding: 0 6px 18px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.sidebar-section {
+  margin-bottom: 18px;
+}
+
+.sidebar-section-title {
+  margin: 0 8px 8px;
+  color: #8e8e93;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Элемент папки в левой колонке */
+
+.sidebar-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
   align-items: center;
   gap: 8px;
-  margin: 14px;
-  padding: 0 12px;
-  min-height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.18);
-}
-
-.search-box input {
-  width: 100%;
-  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
   border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--text);
-}
-
-.search-box input::-webkit-search-cancel-button {
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-.search-box input::placeholder {
-  color: var(--muted-2);
-}
-
-.icon-btn {
-  width: 30px;
-  height: 30px;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text);
-}
-
-.icon-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.icon-btn.small {
-  width: 24px;
-  height: 24px;
-  color: var(--muted);
-  line-height: 1;
-}
-
-.notes-list {
-  overflow: auto;
-  padding: 0 12px 16px;
-}
-
-.list-section-title {
-  margin: 18px 6px 8px;
-  color: var(--muted-2);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.note-card {
-  width: 100%;
-  margin-bottom: 8px;
-  padding: 12px;
-  border: 1px solid transparent;
-  border-radius: 14px;
   background: transparent;
-  color: var(--text);
+  color: #d6d6d6;
   text-align: left;
 }
 
-.note-card:hover {
-  background: rgba(255, 255, 255, 0.06);
+.sidebar-item:hover {
+  background: #242426;
 }
 
-.note-card.active {
-  border-color: rgba(245, 197, 66, 0.45);
-  background: rgba(245, 197, 66, 0.13);
+/* Активная папка */
+
+.sidebar-item.active {
+  background: #333336;
+  color: #fff;
 }
 
-.note-card h3 {
-  margin: 0 0 7px;
+.sidebar-icon {
+  width: 20px;
+  text-align: center;
   font-size: 15px;
-  font-weight: 700;
+  opacity: 0.9;
 }
 
-.note-card p {
-  margin: 0;
-  color: var(--muted);
+.sidebar-count {
+  color: #8e8e93;
   font-size: 13px;
-  line-height: 1.35;
 }
 
-.note-card-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 10px;
-  color: var(--muted-2);
-  font-size: 12px;
-}
+/* Элементы тегов */
 
-.note-preview {
+.tag-sidebar-item {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-width: 0;
+  gap: 10px;
+  height: 28px;
+  padding: 0 8px 0 42px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #d6d6d6;
+  text-align: left;
 }
 
-.note-preview span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.tag-sidebar-item:hover {
+  background: #242426;
+}
+
+.tag-sidebar-item.active {
+  background: #2b2b2d;
+  color: #fff;
 }
 
 .tag-dot {
-  width: 10px;
-  height: 10px;
-  flex: 0 0 auto;
-  border-radius: 999px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
 }
 
-.red-dot { background: var(--red); }
-.yellow-dot { background: var(--yellow); }
-.blue-dot { background: var(--blue); }
-.green-dot { background: var(--green); }
-.purple-dot { background: var(--purple); }
-.gray-dot { background: var(--muted-2); }
+/* Цвета тегов как на скрине */
+
+.tag-recipe { background: #ff9500; }
+.tag-travel { background: #30d158; }
+.tag-reading { background: #0a84ff; }
+.tag-home { background: #bf5af2; }
+.tag-work { background: #ff453a; }
+.tag-ideas { background: #5e5ce6; }
+.tag-finance { background: #30d158; }
+
+.sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: auto;
+  color: #78787c;
+  font-size: 12px;
+}
+
+.totalNotes {
+  border-top: 1px solid #303032;
+  padding: 12px 0 0 0;
+}
